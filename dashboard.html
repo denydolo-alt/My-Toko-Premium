@@ -51,9 +51,17 @@
             body * { visibility: hidden; }
             #printStrukArea, #printStrukArea * { visibility: visible; }
             #printStrukArea { 
-                display: block; position: absolute; left: 0; top: 0; 
-                width: 58mm; font-family: 'Courier New', Courier, monospace; 
-                font-size: 12px; color: #000; padding: 10px 5px; 
+                display: block; 
+                position: absolute; 
+                left: 50%; /* Posisikan ke tengah */
+                top: 0; 
+                transform: translateX(-50%); /* Geser balik setengah lebar struk */
+                width: 58mm; 
+                font-family: 'Courier New', Courier, monospace; 
+                font-size: 12px; 
+                color: #000; 
+                padding: 15px; /* Tambahin margin/padding */
+                margin: 0 auto;
             }
         }
     </style>
@@ -87,7 +95,7 @@
         // =========================================================================
         // URL WEB APP GOOGLE APPS SCRIPT (DEPLOYS SCRIPT KLIEN)
         // =========================================================================
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyB2ey_dLtNrEUp6ceYJXiCU0j-HJMZf0xVFwNR8j7kQQi9-Z-GN8UaeLvFcJnaz7q6Ag/exec';
+        const SCRIPT_URL = 'GANTI DENGAN WEB URL ANDA';
     </script>
 
     <!-- Mobile Sidebar Overlay -->
@@ -1122,9 +1130,52 @@
         </div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- AREA CETAK STRUK THERMAL (HIDDEN) -->
+    <!-- ========================================== -->
+    <div id="printStrukArea">
+        <div style="text-align:center; margin-bottom:10px;">
+            <div id="strLogoContainer" style="display:none; margin-bottom:5px;">
+                <img id="strLogoImg" src="" style="max-height: 40px; max-width: 40px; object-fit: contain; margin: 0 auto;">
+            </div>
+            <h2 id="strNamaToko" style="margin:0; font-size:16px;">NAMA TOKO</h2>
+            <p id="strInfoToko" style="margin:0; font-size:10px;"></p>
+        </div>
+        <div style="border-bottom:1px dashed #000; margin-bottom:5px; padding-bottom:5px;">
+            <p style="margin:0;">No: <span id="strOrderId"></span></p>
+            <p style="margin:0;">Tgl: <span id="strDate"></span></p>
+            <p style="margin:0;">Ksr: <span id="strKasir"></span></p>
+            <p style="margin:0;">Plg: <span id="strPelanggan"></span></p>
+        </div>
+        <div id="strItems" style="border-bottom:1px dashed #000; margin-bottom:5px; padding-bottom:5px;"></div>
+        <div style="border-bottom:1px dashed #000; margin-bottom:5px; padding-bottom:5px;">
+            <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span><span id="strSubtotal"></span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Ongkir:</span><span id="strOngkir"></span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Diskon:</span><span id="strDiskon"></span></div>
+            <div id="strPpnRow" style="display:none; justify-content:space-between;"><span>PPN:</span><span id="strPpn"></span></div>
+            <div id="strServiceRow" style="display:none; justify-content:space-between;"><span>Layanan:</span><span id="strService"></span></div>
+        </div>
+        <div style="border-bottom:1px dashed #000; margin-bottom:5px; padding-bottom:5px;">
+            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:14px;"><span>Total:</span><span id="strTotal"></span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Bayar (<span id="strMethod"></span>):</span><span id="strTunai"></span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Kembali:</span><span id="strKembali"></span></div>
+        </div>
+        <div style="text-align:center; margin-top:10px;">
+            <p style="margin:0;">Terima Kasih!</p>
+            <p style="margin:0; font-size:9px;">Powered by iMersWAstore</p>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
     <!-- JAVASCRIPT LOGIC -->
+    <!-- ========================================== -->
     <script>
-        lucide.createIcons();
+        // Fungsi aman untuk inisialisasi Ikon Lucide
+        function refreshIcons() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
         
         let articleQuill;
         
@@ -2007,12 +2058,6 @@
             if (res.success) { closeModal('userModal'); showGlobalAlert(res.message, true); fetchUsersData(); } else alert(res.message);
         });
 
-        async function deleteUser(id) {
-            if (!confirm("Yakin hapus akun kasir ini secara permanen?")) return;
-            const res = await apiCall('delete_user', { target_user_id: id });
-            if (res.success) fetchUsersData(); else alert(res.message);
-        }
-
         document.getElementById('settingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSaveSetText');
@@ -2213,14 +2258,49 @@
             let uang = method === 'Cash' ? parseInt(document.getElementById('coUangDiterima').value) || 0 : posGrandTotal;
             let change = uang - posGrandTotal;
             if (method === 'Cash' && change < 0) return alert("Uang pembayaran kurang!");
+            if (cart.length === 0) return alert("Keranjang kosong!");
 
-            document.getElementById('btnSubmitCheckout').innerText = "Memproses...";
-            let detail = JSON.stringify(cart.map(c => `${c.name} (${c.qty}${c.unit || 'pcs'})`));
+            const btn = document.getElementById('btnSubmitCheckout');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Mencetak...`;
+            btn.disabled = true;
+
+            const buyer = document.getElementById('coNama').value || 'Pelanggan POS';
+
+            // 1. INSTANT PRINT (Tampilkan dialog cetak SEKETIKA tanpa nunggu server)
+            let localOrderId = "ORD-" + Math.floor(100000 + Math.random() * 900000);
+            if (currentUser.logo && currentUser.logo !== '') {
+                document.getElementById('strLogoImg').src = currentUser.logo;
+                document.getElementById('strLogoContainer').style.display = 'block';
+            } else {
+                document.getElementById('strLogoContainer').style.display = 'none';
+            }
+            document.getElementById('strNamaToko').innerText = (currentUser.nama_toko || 'NAMA TOKO').toUpperCase();
+            document.getElementById('strInfoToko').innerText = "Admin: " + currentUser.username + " | WA: " + (currentUser.wa_number || '-');
+            document.getElementById('strOrderId').innerText = localOrderId;
+            document.getElementById('strDate').innerText = new Date().toLocaleString('id-ID');
+            document.getElementById('strKasir').innerText = currentUser.username;
+            document.getElementById('strPelanggan').innerText = buyer;
+            document.getElementById('strSubtotal').innerText = formatRupiah(posSubtotal);
+            document.getElementById('strOngkir').innerText = formatRupiah(posOngkirCost);
+            document.getElementById('strDiskon').innerText = '-' + formatRupiah(posDiskonVal);
+            if (posPpnVal > 0) { document.getElementById('strPpnRow').style.display = 'flex'; document.getElementById('strPpn').innerText = formatRupiah(posPpnVal); } else { document.getElementById('strPpnRow').style.display = 'none'; }
+            if (posServiceVal > 0) { document.getElementById('strServiceRow').style.display = 'flex'; document.getElementById('strService').innerText = formatRupiah(posServiceVal); } else { document.getElementById('strServiceRow').style.display = 'none'; }
+            document.getElementById('strTotal').innerText = formatRupiah(posGrandTotal);
+            document.getElementById('strMethod').innerText = method; document.getElementById('strTunai').innerText = formatRupiah(uang); document.getElementById('strKembali').innerText = formatRupiah(change);
+            document.getElementById('strItems').innerHTML = cart.map(c => `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>${c.name} (${c.qty})</span><span>${formatRupiah(c.price * c.qty)}</span></div>`).join('');
             
+            // Panggil Jendela Print (Membekukan layar sementara sampai print selesai)
+            window.print();
+
+            // 2. LANJUT KIRIM DATA KE SERVER (Proses Background)
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Menyimpan...`;
+            
+            let detail = JSON.stringify(cart.map(c => `${c.name} (${c.qty}${c.unit || 'pcs'})`));
             let apiItemsArr = cart.map(c => ({ id: c.id, variant_id: c.variant_id || null, name: c.name, qty: c.qty, unit: c.unit || 'pcs' }));
 
             const payload = {
-                nama_pembeli: document.getElementById('coNama').value || 'Pelanggan POS',
+                nama_pembeli: buyer,
                 total_belanja: posGrandTotal,
                 status: 'Selesai',
                 detail_items: detail,
@@ -2236,31 +2316,20 @@
                 biaya_layanan: posServiceVal
             };
 
-            const res = await apiCall('add_order', payload);
-            if (res.success) {
-                document.getElementById('strNamaToko').innerText = (currentUser.nama_toko || 'NAMA TOKO').toUpperCase();
-                document.getElementById('strInfoToko').innerText = "Admin: " + currentUser.username + " | WA: " + (currentUser.wa_number || '-');
-                document.getElementById('strOrderId').innerText = res.order_id;
-                document.getElementById('strDate').innerText = new Date().toLocaleString('id-ID');
-                document.getElementById('strKasir').innerText = currentUser.username;
-                document.getElementById('strPelanggan').innerText = payload.nama_pembeli;
-                document.getElementById('strSubtotal').innerText = formatRupiah(posSubtotal);
-                document.getElementById('strOngkir').innerText = formatRupiah(posOngkirCost);
-                document.getElementById('strDiskon').innerText = '-' + formatRupiah(posDiskonVal);
-                if (posPpnVal > 0) { document.getElementById('strPpnRow').style.display = 'flex'; document.getElementById('strPpn').innerText = formatRupiah(posPpnVal); } else { document.getElementById('strPpnRow').style.display = 'none'; }
-                if (posServiceVal > 0) { document.getElementById('strServiceRow').style.display = 'flex'; document.getElementById('strService').innerText = formatRupiah(posServiceVal); } else { document.getElementById('strServiceRow').style.display = 'none'; }
-                document.getElementById('strTotal').innerText = formatRupiah(posGrandTotal);
-                document.getElementById('strMethod').innerText = method; document.getElementById('strTunai').innerText = formatRupiah(uang); document.getElementById('strKembali').innerText = formatRupiah(change);
-                document.getElementById('strItems').innerHTML = cart.map(c => `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>${c.name} (${c.qty})</span><span>${formatRupiah(c.price * c.qty)}</span></div>`).join('');
-                
-                showGlobalAlert("✅ Pesanan Kasir Berhasil Disimpan!", true);
-                closeModal('checkoutModal'); clearCart();
-                await fetchDashboardData(); switchView('order');
-                document.getElementById('btnSubmitCheckout').innerText = "Konfirmasi & Cetak";
-                setTimeout(() => window.print(), 500);
-            } else {
-                alert("Gagal memproses pesanan.");
-                document.getElementById('btnSubmitCheckout').innerText = "Konfirmasi & Cetak";
+            try {
+                const res = await apiCall('add_order', payload);
+                if (res.success) {
+                    showGlobalAlert("✅ Pesanan Kasir Berhasil Disimpan!", true);
+                    closeModal('checkoutModal'); clearCart();
+                    await fetchDashboardData(); switchView('order');
+                } else {
+                    alert("Gagal memproses pesanan ke database.");
+                }
+            } catch(e) {
+                console.error("Error Checkout POS: ", e);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
 
