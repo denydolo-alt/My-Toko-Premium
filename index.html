@@ -1,2437 +1,1565 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth bg-slate-50">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>iMersWAstore — Toko Online, POS Kasir & WhatsApp Automation</title>
-    <meta name="description" content="Bangun toko online profesional, kelola POS kasir, dan otomatisasi WhatsApp dalam satu platform mudah untuk UMKM Indonesia." />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Belanja Online</title>
     
-    <script>
-        // URL DEPLOY TERBARU LO SUDAH DIPASANG DI SINI BOS!
-        const SETTING_SCRIPT_URL = 'URL WEB APP GOOGLE APPS SCRIPT ANDA MASUKAN DISINI';
-        
-        let fdSettings = new FormData();
-        fdSettings.append('action', 'get_app_settings');
-        
-        // Mengecek apakah landing page ini diizinkan tampil oleh Admin
-        fetch(SETTING_SCRIPT_URL, { method: 'POST', body: fdSettings })
-            .then(res => res.json())
-            .then(res => {
-                if(res.success && res.data && res.data.show_landing_page === 'off') {
-                    // Jika dimatikan, paksa tendang pengunjung ke halaman login
-                    window.location.replace('login.html');
-                }
-            })
-            .catch(err => console.log("Gagal memuat konfigurasi awal", err));
-    </script>
-
+    <!-- FAVICON DEFAULT -->
+    <link id="dynamicFavicon" rel="icon" type="image/png" href="https://placehold.co/32x32/10b981/ffffff?text=S">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* Variabel Tema Dinamis */
         :root {
-            --navy: #08162f;
-            --ink: #13213c;
-            --muted: #65728a;
-            --line: #e6edf7;
-            --white: #ffffff;
-            --soft: #f6f9fd;
-            --blue: #2563eb;
-            --cyan: #22d3ee;
-            --mint: #7ee6b8;
-            --mint-soft: #dffcf0;
-            --green-soft: #bdf4d4;
-            --lavender: #e9e7ff;
-            --warning: #fff3d6;
-            --shadow: 0 24px 70px rgba(15, 44, 89, .14);
-            --shadow-soft: 0 14px 40px rgba(15, 44, 89, .09);
-            --radius-xl: 32px;
-            --radius-lg: 24px;
-            --radius-md: 18px;
-            --container: 1160px;
+            --theme-bg: #f8fafc;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            background-color: var(--theme-bg); 
+            transition: background-color 0.5s ease;
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar { 
+            display: none; 
+        }
+        
+        .hide-scrollbar { 
+            -ms-overflow-style: none; 
+            scrollbar-width: none; 
+        }
+        
+        /* Animasi Skeleton Loading */
+        .skeleton { 
+            background: #e2e8f0; 
+            animation: pulse 1.5s infinite ease-in-out; 
+        }
+        
+        @keyframes pulse { 
+            0% { opacity: 1; } 
+            50% { opacity: 0.5; } 
+            100% { opacity: 1; } 
         }
 
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            color: var(--ink);
-            background: var(--white);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        h1, h2, h3, h4, h5, h6, .brand, .eyebrow, .offer-pill, .stat strong, .price {
-            font-family: "Montserrat", sans-serif;
-        }
-
-        a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        img {
-            max-width: 100%;
-            display: block;
-        }
-
-        .container {
-            width: min(var(--container), calc(100% - 40px));
-            margin-inline: auto;
-        }
-
-        .section {
-            padding: 110px 0;
-            position: relative;
-        }
-
-        .eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 14px;
-            border-radius: 999px;
-            color: #0f4b79;
-            background: linear-gradient(135deg, rgba(126, 230, 184, .35), rgba(34, 211, 238, .18));
-            border: 1px solid rgba(37, 99, 235, .1);
-            font-weight: 800;
-            font-size: 13px;
-            letter-spacing: .01em;
-        }
-
-        .gradient-text {
-            background: linear-gradient(100deg, var(--blue), #00a6d6 45%, #31c48d);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            min-height: 52px;
-            padding: 0 22px;
-            border-radius: 14px;
-            font-weight: 800;
-            font-size: 15px;
-            transition: .25s ease;
-            cursor: pointer;
-            border: 0;
+        /* Animasi Marquee Teks Berjalan */
+        .marquee-container {
+            overflow: hidden;
             white-space: nowrap;
-        }
-
-        .btn-primary {
-            color: #fff;
-            background: linear-gradient(135deg, var(--blue), #06b6d4 52%, #53d38d);
-            box-shadow: 0 14px 35px rgba(37, 99, 235, .28);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 18px 44px rgba(37, 99, 235, .36);
-        }
-
-        .btn-secondary {
-            color: var(--ink);
-            background: rgba(255, 255, 255, .82);
-            border: 1px solid var(--line);
-            box-shadow: 0 10px 25px rgba(15, 44, 89, .06);
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-3px);
-            border-color: rgba(37, 99, 235, .25);
-        }
-
-        .topbar {
             width: 100%;
-            position: fixed;
-            inset: 0 0 auto 0;
-            z-index: 50;
-            padding: 18px 0;
-            transition: .25s ease;
-        }
-
-        .topbar.is-scrolled {
-            background: rgba(255, 255, 255, .82);
-            backdrop-filter: blur(18px);
-            border-bottom: 1px solid rgba(230, 237, 247, .75);
-            padding: 12px 0;
-        }
-
-        .nav {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 28px;
-        }
-
-        .brand {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 900;
-            color: var(--navy);
-            letter-spacing: -.03em;
-            font-size: 22px;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 28px;
-            color: #3e4b63;
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .nav-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .nav-actions .login {
-            color: #3e4b63;
-            font-weight: 800;
-            font-size: 14px;
-            padding: 10px 16px;
-            transition: .2s;
-        }
-        
-        .nav-actions .login:hover {
-            color: var(--blue);
-        }
-
-        .nav-actions .mini-btn {
-            padding: 10px 16px;
-            border-radius: 12px;
-            color: #fff;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--blue), #24c6dc, #6ee7b7);
-            font-size: 13px;
-            transition: transform 0.2s;
-        }
-        .nav-actions .mini-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .mobile-toggle {
-            display: none;
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            border: 1px solid var(--line);
-            background: #fff;
-            color: var(--ink);
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        /* CSS MOBILE MENU BARU */
-        .mobile-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--line);
-            padding: 20px;
-            box-shadow: var(--shadow-soft);
-            z-index: 49;
-        }
-        .mobile-menu.is-open {
-            display: block;
-        }
-        .mobile-nav {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .mobile-nav a {
-            font-weight: 700;
-            color: var(--navy);
-            text-align: center;
-            padding: 12px;
-            border-radius: 12px;
-            background: var(--soft);
-            border: 1px solid var(--line);
-        }
-        .mobile-nav a.mini-btn {
-            background: linear-gradient(135deg, var(--blue), #24c6dc, #6ee7b7);
-            color: white;
-            border: none;
-        }
-
-        .hero {
-            min-height: 860px;
-            padding: 172px 0 90px;
-            overflow: hidden;
-            background:
-                radial-gradient(circle at 8% 20%, rgba(126, 230, 184, .46), transparent 28%),
-                radial-gradient(circle at 88% 4%, rgba(37, 99, 235, .20), transparent 25%),
-                radial-gradient(circle at 82% 34%, rgba(189, 244, 212, .38), transparent 22%),
-                linear-gradient(180deg, #fbfeff 0%, #f4fbff 56%, #ffffff 100%);
-        }
-
-        .hero::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background-image: radial-gradient(rgba(37, 99, 235, .12) 1px, transparent 1px);
-            background-size: 28px 28px;
-            mask-image: linear-gradient(to bottom, transparent, black 18%, transparent 82%);
-            pointer-events: none;
-        }
-
-        .hero-grid {
-            position: relative;
-            display: grid;
-            grid-template-columns: 1.04fr .96fr;
-            align-items: center;
-            gap: 72px;
-            z-index: 1;
-        }
-
-        .hero h1 {
-            max-width: 680px;
-            color: var(--navy);
-            font-size: clamp(43px, 6vw, 76px);
-            line-height: .95;
-            letter-spacing: -.07em;
-            margin-top: 22px;
-            margin-bottom: 26px;
-        }
-
-        .hero p.lead {
-            max-width: 610px;
-            color: #4a5870;
-            font-size: 19px;
-            line-height: 1.75;
-            margin-bottom: 28px;
-        }
-
-        .hero-offers {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 26px 0 30px;
-        }
-
-        .offer-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 13px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, .78);
-            border: 1px solid rgba(37, 99, 235, .12);
-            color: #23324b;
-            font-size: 13px;
-            font-weight: 900;
-            box-shadow: 0 10px 28px rgba(15, 44, 89, .07);
-        }
-
-        .hero-actions {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 14px;
-            margin-bottom: 24px;
-        }
-
-        .trust {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: var(--muted);
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .avatars {
             display: flex;
             align-items: center;
         }
-
-        .avatar {
-            width: 30px;
-            height: 30px;
-            margin-left: -7px;
-            display: grid;
-            place-items: center;
-            border-radius: 999px;
-            color: #fff;
-            border: 2px solid #fff;
-            font-size: 11px;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--blue), #49d7ae);
-        }
-
-        .avatar:first-child {
-            margin-left: 0;
-        }
-
-        .hero-visual {
-            position: relative;
-            min-height: 520px;
-        }
-
-        .dashboard-card {
-            position: relative;
-            width: min(100%, 570px);
-            margin-left: auto;
-            border-radius: var(--radius-xl);
-            background: rgba(255, 255, 255, .88);
-            border: 1px solid rgba(255, 255, 255, .7);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            backdrop-filter: blur(18px);
-        }
-
-        .browser-dots {
-            height: 44px;
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            padding: 0 18px;
-            border-bottom: 1px solid #eff4fb;
-            color: #92a0b5;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .dot {
-            width: 11px;
-            height: 11px;
-            border-radius: 99px;
-        }
-
-        .dot.red { background: #ff7a8a; }
-        .dot.yellow { background: #ffd36d; }
-        .dot.green { background: #65e6aa; }
-
-        .dash-body {
-            display: grid;
-            grid-template-columns: 145px 1fr;
-            min-height: 340px;
-        }
-
-        .sidebar {
-            padding: 24px 18px;
-            background: linear-gradient(180deg, #f8fbff, #eef8ff);
-            border-right: 1px solid #e9eff8;
-        }
-
-        .menu-label {
-            color: #8a97aa;
-            font-size: 11px;
-            font-weight: 900;
-            margin-bottom: 12px;
-        }
-
-        .side-item {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 11px 12px;
-            border-radius: 12px;
-            color: #536079;
-            font-size: 12px;
-            font-weight: 800;
-            margin-bottom: 8px;
-        }
-
-        .side-item.active {
-            color: #095b91;
-            background: linear-gradient(135deg, rgba(126, 230, 184, .28), rgba(34, 211, 238, .17));
-        }
-
-        .side-icon {
-            width: 17px;
-            height: 17px;
-            border-radius: 5px;
-            background: linear-gradient(135deg, var(--blue), #61dba5);
-            opacity: .75;
-        }
-
-        .dash-main {
-            padding: 28px;
-        }
-
-        .dash-head {
-            display: flex;
-            justify-content: space-between;
-            gap: 18px;
-            align-items: start;
-            margin-bottom: 18px;
-        }
-
-        .dash-head h3 {
-            font-size: 18px;
-            color: var(--navy);
-            letter-spacing: -.03em;
-        }
-
-        .dash-head span {
-            display: block;
-            color: #7d8ca2;
-            font-size: 12px;
-            font-weight: 700;
-            margin-top: 3px;
-        }
-
-        .mini-avatar {
-            width: 32px;
-            height: 32px;
-            display: grid;
-            place-items: center;
-            border-radius: 50%;
-            color: #26618c;
-            background: #eaf9ff;
-            font-weight: 900;
-        }
-
-        .metric-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-bottom: 18px;
-        }
-
-        .metric {
-            border: 1px solid #edf2f8;
-            border-radius: 18px;
-            padding: 15px;
-            background: #fff;
-            box-shadow: 0 10px 25px rgba(15, 44, 89, .04);
-        }
-
-        .metric small {
-            display: block;
-            color: #718095;
-            font-weight: 800;
-            font-size: 11px;
-            margin-bottom: 5px;
-        }
-
-        .metric strong {
-            color: var(--navy);
-            font-size: 22px;
-            letter-spacing: -.04em;
-        }
-
-        .chart {
-            padding: 18px;
-            border-radius: 20px;
-            border: 1px solid #edf2f8;
-            background: linear-gradient(180deg, #fff, #fbfdff);
-        }
-
-        .chart-title {
-            color: #546177;
-            font-size: 12px;
-            font-weight: 900;
-            margin-bottom: 20px;
-        }
-
-        .bars {
-            height: 112px;
-            display: flex;
-            align-items: end;
-            gap: 12px;
-        }
-
-        .bar {
-            flex: 1;
-            border-radius: 8px 8px 4px 4px;
-            background: linear-gradient(180deg, #2563eb, #22d3ee 55%, #8ef0c1);
-            opacity: .9;
-        }
-
-        .float-order,
-        .float-pos {
-            position: absolute;
-            z-index: 3;
-            background: rgba(255, 255, 255, .9);
-            border: 1px solid rgba(255, 255, 255, .8);
-            border-radius: 20px;
-            box-shadow: var(--shadow-soft);
-            backdrop-filter: blur(16px);
-        }
-
-        .float-order {
-            right: -26px;
-            top: 120px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 16px;
-        }
-
-        .check {
-            width: 38px;
-            height: 38px;
-            display: grid;
-            place-items: center;
-            border-radius: 50%;
-            color: #095b91;
-            background: linear-gradient(135deg, #dffcf0, #d9f0ff);
-            font-weight: 900;
-        }
-
-        .float-order strong,
-        .float-pos strong {
-            display: block;
-            color: var(--navy);
-            font-size: 13px;
-            line-height: 1.2;
-        }
-
-        .float-order span,
-        .float-pos span {
-            color: #6b788f;
-            font-size: 11px;
-            font-weight: 700;
-        }
-
-        .float-pos {
-            left: -30px;
-            bottom: 42px;
-            width: 250px;
-            padding: 18px;
-        }
-
-        .cart-line {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            font-size: 12px;
-            font-weight: 800;
-            color: #516077;
-            margin-top: 12px;
-        }
-
-        .cart-total {
-            margin-top: 14px;
-            padding-top: 13px;
-            border-top: 1px dashed #d9e4f2;
-            display: flex;
-            justify-content: space-between;
-            color: var(--navy);
-            font-weight: 900;
-        }
-
-        .stats {
-            padding: 32px 0;
-            background: #fff;
-            border-top: 1px solid #eff4f8;
-            border-bottom: 1px solid #eff4f8;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 18px;
-            text-align: center;
-        }
-
-        .stat {
-            padding: 14px 8px;
-            border-right: 1px solid #eef3f8;
-        }
-
-        .stat:last-child {
-            border-right: 0;
-        }
-
-        .stat strong {
-            display: block;
-            color: #0f8ed8;
-            font-size: 30px;
-            line-height: 1;
-            letter-spacing: -.05em;
-        }
-
-        .stat span {
-            color: var(--muted);
-            font-size: 12px;
-            font-weight: 800;
-        }
-
-        .section-head {
-            max-width: 760px;
-            margin-inline: auto;
-            text-align: center;
-            margin-bottom: 56px;
-        }
-
-        .section-head h2 {
-            color: var(--navy);
-            font-size: clamp(32px, 4vw, 50px);
-            line-height: 1.08;
-            letter-spacing: -.055em;
-            margin-bottom: 16px;
-        }
-
-        .section-head p {
-            color: var(--muted);
-            font-size: 17px;
-        }
-
-        /* KONEKSI MITRA CSS */
-        .mitra-section {
-            background: #fff;
-            border-bottom: 1px solid #eff4f8;
-        }
-
-        .mitra-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 22px;
-        }
-
-        .mitra-card {
-            background: linear-gradient(var(--soft), var(--soft)) padding-box,
-                        linear-gradient(135deg, var(--blue), var(--cyan) 52%, var(--mint)) border-box;
-            border: 2px solid transparent;
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            text-align: center;
-            transition: all .3s ease;
-            box-shadow: 0 10px 25px rgba(15, 44, 89, .04);
-        }
-
-        .mitra-card:hover { 
-            transform: translateY(-6px); 
-            box-shadow: 0 16px 40px rgba(37, 99, 235, .15); 
-        }
-
-        .mitra-logo {
-            width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--blue), #22d3ee); color: #fff;
-            display: grid; place-items: center; font-size: 24px; font-weight: 900;
-            overflow: hidden; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-        .mitra-logo img { width: 100%; height: 100%; object-fit: cover; }
-        .mitra-name { color: var(--navy); font-size: 18px; font-weight: 800; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Montserrat', sans-serif;}
-        .mitra-badge { color: #059669; font-size: 12px; font-weight: 700; margin-bottom: 18px; display: inline-flex; align-items: center; gap: 4px; background: #d1fae5; padding: 4px 10px; border-radius: 99px; }
-        
-        .mitra-link { 
-            display: block; 
-            padding: 10px; 
-            border-radius: 12px; 
-            background: #fff; 
-            color: var(--blue); 
-            font-weight: 800; 
-            font-size: 14px; 
-            transition: all .3s ease; 
-            border: 1px solid #dce4ef;
-        }
-        .mitra-link:hover { 
-            background: linear-gradient(135deg, var(--blue), var(--cyan) 52%, var(--mint));
-            color: #fff; 
-            border-color: transparent; 
-            box-shadow: 0 8px 20px rgba(37, 99, 235, .25);
-            transform: translateY(-2px);
-        }
-
-        .features {
-            background: var(--soft);
-        }
-
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-        }
-
-        .feature-card {
-            min-height: 230px;
-            padding: 30px;
-            border-radius: var(--radius-lg);
-            background: #fff;
-            border: 1px solid #edf2f8;
-            box-shadow: 0 12px 38px rgba(15, 44, 89, .05);
-            transition: .25s ease;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 20px 48px rgba(15, 44, 89, .09);
-        }
-
-        .icon-box {
-            width: 46px;
-            height: 46px;
-            display: grid;
-            place-items: center;
-            border-radius: 15px;
-            margin-bottom: 22px;
-            font-size: 22px;
-            background: linear-gradient(135deg, rgba(37, 99, 235, .12), rgba(126, 230, 184, .30));
-        }
-
-        .feature-card h3 {
-            color: var(--navy);
-            font-size: 20px;
-            letter-spacing: -.035em;
-            margin-bottom: 10px;
-        }
-
-        .feature-card p {
-            color: var(--muted);
-            font-size: 15px;
-        }
-
-        .wide-card {
-            grid-column: span 2;
-            color: #dcecff;
-            background:
-                radial-gradient(circle at 86% 10%, rgba(126, 230, 184, .30), transparent 30%),
-                linear-gradient(135deg, #08162f, #123466 55%, #155e75);
-            border: 0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .wide-card h3 {
-            color: #fff;
-        }
-
-        .wide-card p {
-            color: #c7d7ee;
-            max-width: 620px;
-        }
-
-        .wide-card .tag {
-            display: inline-flex;
-            padding: 7px 11px;
-            border-radius: 999px;
-            background: rgba(126, 230, 184, .15);
-            color: #aaf4d0;
-            font-size: 11px;
-            font-weight: 900;
-            margin-bottom: 16px;
-            border: 1px solid rgba(126, 230, 184, .22);
-        }
-
-        .pos-mini {
-            margin-top: 24px;
-            max-width: 510px;
-            padding: 18px;
-            border-radius: 18px;
-            background: rgba(255, 255, 255, .08);
-            border: 1px solid rgba(255, 255, 255, .12);
-        }
-
-        .pos-mini .pay {
-            margin-top: 14px;
-            height: 42px;
-            border-radius: 12px;
-            display: grid;
-            place-items: center;
-            color: #06324f;
-            font-size: 13px;
-            font-weight: 900;
-            background: linear-gradient(135deg, #bdf4d4, #9ddcff);
-        }
-
-        .split {
-            display: grid;
-            grid-template-columns: .94fr 1.06fr;
-            align-items: center;
-            gap: 64px;
-        }
-
-        .copy-block h2 {
-            color: var(--navy);
-            font-size: clamp(33px, 4.2vw, 54px);
-            line-height: 1.06;
-            letter-spacing: -.06em;
-            margin: 18px 0;
-        }
-
-        .copy-block p {
-            color: var(--muted);
-            font-size: 17px;
-            margin-bottom: 16px;
-        }
-
-        .steps {
-            display: grid;
-            gap: 14px;
-            margin-top: 28px;
-        }
-
-        .step {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 16px;
-            border-radius: 18px;
-            background: #fff;
-            border: 1px solid var(--line);
-            box-shadow: 0 12px 30px rgba(15, 44, 89, .05);
-            font-weight: 900;
-            color: var(--ink);
-        }
-
-        .step-number {
-            width: 36px;
-            height: 36px;
-            display: grid;
-            place-items: center;
-            border-radius: 12px;
-            color: #fff;
-            background: linear-gradient(135deg, var(--blue), #1fc9cb);
-            flex: 0 0 auto;
-        }
-
-        .phone-mockup {
-            max-width: 440px;
-            margin-left: auto;
-            padding: 16px;
-            border-radius: 38px;
-            background: linear-gradient(145deg, #10264d, #07142c);
-            box-shadow: var(--shadow);
-            position: relative;
-        }
-
-        .phone-screen {
-            border-radius: 28px;
-            background: #f8fbff;
-            overflow: hidden;
-            min-height: 610px;
-            border: 1px solid rgba(255, 255, 255, .1);
-        }
-
-        .phone-top {
-            padding: 24px 22px 18px;
-            background: linear-gradient(135deg, rgba(37, 99, 235, .9), rgba(34, 211, 238, .82), rgba(126, 230, 184, .78));
-            color: #fff;
-        }
-
-        .phone-top small {
-            font-weight: 800;
-            opacity: .86;
-        }
-
-        .phone-top h3 {
-            font-size: 26px;
-            line-height: 1.1;
-            letter-spacing: -.04em;
-            margin-top: 7px;
-        }
-
-        .product-list {
-            padding: 18px;
-            display: grid;
-            gap: 14px;
-        }
-
-        .product-item {
-            display: grid;
-            grid-template-columns: 72px 1fr;
-            gap: 14px;
-            align-items: center;
-            padding: 12px;
-            background: #fff;
-            border: 1px solid #edf2f8;
-            border-radius: 18px;
-        }
-
-        .product-img {
-            height: 72px;
-            border-radius: 16px;
-            background:
-                radial-gradient(circle at 25% 25%, rgba(255, 255, 255, .8), transparent 20%),
-                linear-gradient(135deg, #dbeafe, #bdf4d4);
-        }
-
-        .product-item strong {
-            display: block;
-            color: var(--navy);
-            font-size: 14px;
-        }
-
-        .product-item span {
-            color: #0d8dca;
-            font-size: 13px;
-            font-weight: 900;
-        }
-
-        .checkout-bar {
-            margin: 4px 18px 18px;
-            height: 50px;
-            border-radius: 16px;
-            display: grid;
-            place-items: center;
-            color: #fff;
-            background: linear-gradient(135deg, var(--blue), #21c4cf);
-            font-weight: 900;
-        }
-
-        .automation {
-            background:
-                radial-gradient(circle at 10% 24%, rgba(126, 230, 184, .35), transparent 26%),
-                radial-gradient(circle at 90% 20%, rgba(37, 99, 235, .16), transparent 27%),
-                #fff;
-        }
-
-        .automation-grid {
-            display: grid;
-            grid-template-columns: .9fr 1.1fr;
-            gap: 34px;
-            align-items: start;
-        }
-
-        .integration-card {
-            border-radius: var(--radius-xl);
-            padding: 36px;
-            background: linear-gradient(135deg, #08162f, #123466);
-            color: #fff;
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 110px;
-        }
-
-        .integration-card h3 {
-            font-size: 32px;
-            letter-spacing: -.05em;
-            line-height: 1.1;
-            margin-bottom: 14px;
-        }
-
-        .integration-card p {
-            color: #c9d8ed;
-            margin-bottom: 24px;
-        }
-
-        .logo-row {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
-        }
-
-        .logo-pill {
-            min-height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 16px;
-            color: #e9fbff;
-            font-size: 17px;
-            font-weight: 800;
-            background: rgba(255, 255, 255, .08);
-            border: 1px solid rgba(255, 255, 255, .14);
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-
-        .logo-pill:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .check-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
-        }
-
-        .check-item {
-            display: flex;
-            align-items: start;
-            gap: 12px;
-            padding: 18px;
-            border-radius: 18px;
-            background: #fff;
-            border: 1px solid #edf2f8;
-            box-shadow: 0 12px 35px rgba(15, 44, 89, .05);
-            color: var(--ink);
-            font-weight: 800;
-        }
-
-        .check-badge {
-            width: 24px;
-            height: 24px;
-            display: grid;
-            place-items: center;
-            border-radius: 50%;
-            flex: 0 0 auto;
-            color: #0e5b91;
-            background: linear-gradient(135deg, #dffcf0, #dbeafe);
-            font-size: 14px;
-            font-weight: 900;
-        }
-
-        .pos-section {
-            background: var(--soft);
-        }
-
-        .pos-panel {
-            padding: 42px;
-            border-radius: var(--radius-xl);
-            background:
-                linear-gradient(135deg, rgba(255, 255, 255, .94), rgba(255, 255, 255, .72)),
-                radial-gradient(circle at 10% 10%, rgba(126, 230, 184, .32), transparent 32%),
-                radial-gradient(circle at 90% 20%, rgba(37, 99, 235, .18), transparent 28%);
-            border: 1px solid rgba(230, 237, 247, .9);
-            box-shadow: var(--shadow-soft);
-        }
-
-        .pos-grid {
-            display: grid;
-            grid-template-columns: .95fr 1.05fr;
-            gap: 40px;
-            align-items: center;
-        }
-
-        .pos-list {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-top: 24px;
-        }
-
-        .pos-list li,
-        .simple-list li {
-            list-style: none;
-        }
-
-        .pos-list li {
-            padding: 14px 14px;
-            border-radius: 15px;
-            background: #fff;
-            border: 1px solid #edf2f8;
-            color: #37445d;
-            font-weight: 800;
-            font-size: 14px;
-        }
-
-        .terminal {
-            border-radius: 28px;
-            overflow: hidden;
-            background: #07142c;
-            color: #eaf6ff;
-            box-shadow: var(--shadow);
-        }
-
-        .terminal-head {
-            padding: 18px 20px;
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(255, 255, 255, .1);
-        }
-
-        .terminal-head strong {
-            font-size: 16px;
-        }
-
-        .terminal-body {
-            padding: 20px;
-        }
-
-        .receipt-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 14px;
-            padding: 13px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, .08);
-            color: #bfcee2;
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        .receipt-total {
-            margin-top: 18px;
-            padding: 18px;
-            border-radius: 18px;
-            background: linear-gradient(135deg, rgba(37, 99, 235, .28), rgba(126, 230, 184, .18));
-            display: flex;
-            justify-content: space-between;
-            color: #fff;
-            font-weight: 900;
-            font-size: 20px;
-        }
-
-        .pay-btn {
-            margin-top: 14px;
-            height: 52px;
-            display: grid;
-            place-items: center;
-            color: #06192e;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #dffcf0, #94d8ff);
-            font-weight: 900;
-        }
-
-        .products {
-            background: #fff;
-        }
-
-        .mini-feature-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-        }
-
-        .mini-feature {
-            padding: 22px;
-            border-radius: 20px;
-            background: var(--soft);
-            border: 1px solid #edf2f8;
-            font-weight: 900;
-            color: var(--ink);
-        }
-
-        .audience {
-            background:
-                linear-gradient(180deg, #ffffff 0%, #f6f9fd 100%);
-        }
-
-        .audience-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 14px;
-        }
-
-        .audience-card {
-            padding: 20px 14px;
-            text-align: center;
-            border-radius: 20px;
-            background: #fff;
-            border: 1px solid #edf2f8;
-            box-shadow: 0 10px 28px rgba(15, 44, 89, .04);
-            font-weight: 900;
-            color: #26344e;
-            transition: .2s ease;
-        }
-
-        .audience-card:hover {
-            transform: translateY(-4px);
-        }
-
-        .audience-card span {
-            display: block;
-            font-size: 26px;
-            margin-bottom: 8px;
-        }
-
-        .umkm-program {
-            background:
-                radial-gradient(circle at 50% 0%, rgba(126, 230, 184, .36), transparent 30%),
-                radial-gradient(circle at 80% 60%, rgba(37, 99, 235, .14), transparent 32%),
-                #08162f;
-            color: #fff;
-            overflow: hidden;
-        }
-
-        .program-card {
-            width: min(900px, 100%);
-            margin: auto;
-            padding: 54px;
-            text-align: center;
-            border-radius: 36px;
-            background: rgba(255, 255, 255, .08);
-            border: 1px solid rgba(255, 255, 255, .13);
-            box-shadow: 0 30px 90px rgba(0, 0, 0, .2);
-            backdrop-filter: blur(16px);
-        }
-
-        .program-card h2 {
-            font-size: clamp(36px, 5vw, 64px);
-            letter-spacing: -.07em;
-            line-height: .98;
-            margin: 16px 0;
-        }
-
-        .program-card p {
-            color: #c7d7ee;
-            font-size: 18px;
-            max-width: 620px;
-            margin: 0 auto 28px;
-        }
-
-        .pricing {
-            background: #fff;
-        }
-
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 22px;
-            align-items: stretch;
-        }
-
-        .price-card {
-            position: relative;
-            padding: 34px;
-            border-radius: 28px;
-            background: #fff;
-            border: 1px solid #dfe8f5;
-            box-shadow: 0 14px 38px rgba(15, 44, 89, .06);
-            display: flex;
-            flex-direction: column;
-            min-height: 560px;
-        }
-
-        .price-card.featured {
-            color: #fff;
-            background:
-                radial-gradient(circle at 90% 5%, rgba(126, 230, 184, .36), transparent 32%),
-                linear-gradient(135deg, #1555d5, #0693d6 48%, #34c68b);
-            border: 0;
-            transform: translateY(-18px);
-            box-shadow: 0 28px 80px rgba(37, 99, 235, .27);
-        }
-
-        .popular {
-            position: absolute;
-            top: -14px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 7px 13px;
-            border-radius: 999px;
-            background: #dffcf0;
-            color: #0f4b79;
-            font-size: 11px;
-            font-weight: 900;
-            letter-spacing: .03em;
-        }
-
-        .price-card h3 {
-            color: var(--navy);
-            font-size: 24px;
-            letter-spacing: -.04em;
-            margin-bottom: 8px;
-        }
-
-        .price-card.featured h3 {
-            color: #fff;
-        }
-
-        .price-desc {
-            color: var(--muted);
-            min-height: 52px;
-            margin-bottom: 22px;
-        }
-
-        .price-card.featured .price-desc {
-            color: rgba(255, 255, 255, .82);
-        }
-
-        .price {
-            color: var(--navy);
-            font-size: 44px;
-            line-height: 1;
-            font-weight: 900;
-            letter-spacing: -.07em;
-            margin-bottom: 26px;
-        }
-
-        .price span {
-            color: var(--muted);
-            font-size: 15px;
-            letter-spacing: 0;
-            font-weight: 800;
-        }
-
-        .price-card.featured .price,
-        .price-card.featured .price span {
-            color: #fff;
-        }
-
-        .simple-list {
-            display: grid;
-            gap: 12px;
-            margin-bottom: 28px;
-        }
-
-        .simple-list li {
-            display: flex;
-            align-items: start;
-            gap: 10px;
-            color: #34435c;
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .price-card.featured .simple-list li {
-            color: rgba(255, 255, 255, .92);
-        }
-
-        .simple-list li::before {
-            content: "✓";
-            width: 22px;
-            height: 22px;
-            display: grid;
-            place-items: center;
-            flex: 0 0 auto;
-            border-radius: 50%;
-            color: #0e5b91;
-            background: linear-gradient(135deg, #dffcf0, #dbeafe);
-            font-size: 13px;
-            font-weight: 900;
-        }
-
-        .price-card.featured .simple-list li::before {
-            background: rgba(255, 255, 255, .2);
-            color: #fff;
-        }
-
-        .price-card .btn {
-            margin-top: auto;
-            width: 100%;
-        }
-
-        .why {
-            background:
-                radial-gradient(circle at 0% 20%, rgba(126, 230, 184, .26), transparent 24%),
-                var(--soft);
-        }
-
-        .why-grid {
-            display: grid;
-            grid-template-columns: .9fr 1.1fr;
-            gap: 50px;
-            align-items: center;
-        }
-
-        .why-card {
-            padding: 38px;
-            border-radius: 34px;
-            color: #fff;
-            background: linear-gradient(135deg, #08162f, #173f75);
-            box-shadow: var(--shadow);
-        }
-
-        .why-card h2 {
-            font-size: clamp(32px, 4vw, 48px);
-            line-height: 1.05;
-            letter-spacing: -.06em;
-            margin-bottom: 18px;
-        }
-
-        .why-card p {
-            color: #c7d7ee;
-            font-size: 17px;
-        }
-
-        .why-points {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
-        }
-
-        .faq {
-            background: #fff;
-        }
-
-        .faq-list {
-            max-width: 900px;
-            margin: auto;
-            display: grid;
-            gap: 14px;
-        }
-
-        details {
-            border-radius: 20px;
-            border: 1px solid #e1e9f5;
-            background: #fff;
-            box-shadow: 0 12px 32px rgba(15, 44, 89, .04);
-            overflow: hidden;
-        }
-
-        summary {
-            cursor: pointer;
-            padding: 22px 24px;
-            color: var(--navy);
-            font-weight: 900;
-            list-style: none;
-            display: flex;
-            justify-content: space-between;
-            gap: 16px;
-        }
-
-        summary::-webkit-details-marker {
-            display: none;
-        }
-
-        summary::after {
-            content: "+";
-            font-size: 24px;
-            line-height: 1;
-            color: #168dcc;
-        }
-
-        details[open] summary::after {
-            content: "−";
-        }
-
-        details p {
-            color: var(--muted);
-            padding: 0 24px 24px;
-        }
-
-        .cta {
-            padding: 120px 0;
-            background:
-                radial-gradient(circle at 50% 0%, rgba(126, 230, 184, .35), transparent 32%),
-                radial-gradient(circle at 20% 90%, rgba(37, 99, 235, .24), transparent 30%),
-                linear-gradient(135deg, #08162f, #102d5d);
-            color: #fff;
-            text-align: center;
-        }
-
-        .cta h2 {
-            max-width: 860px;
-            margin: 0 auto 18px;
-            font-size: clamp(38px, 6vw, 72px);
-            line-height: .96;
-            letter-spacing: -.075em;
-        }
-
-        .cta p {
-            color: #c7d7ee;
-            max-width: 720px;
-            margin: 0 auto 30px;
-            font-size: 18px;
-        }
-
-        .footer {
-            padding: 36px 0;
-            color: #8d9ab0;
-            background: #061024;
-            font-size: 13px;
-        }
-
-        .footer .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-            text-align: center;
-        }
-
-        .floating-wa {
-            position: fixed;
-            z-index: 60;
-            right: 24px;
-            bottom: 24px;
-            width: 62px;
-            height: 62px;
-            display: grid;
-            place-items: center;
-            border-radius: 50%;
-            color: #06243d;
-            background: linear-gradient(135deg, #dffcf0, #9ddcff);
-            box-shadow: 0 18px 45px rgba(37, 99, 235, .24);
-            border: 1px solid rgba(255, 255, 255, .7);
-            font-size: 26px;
-        }
-
-        .reveal {
-            opacity: 0;
-            transform: translateY(24px);
-            transition: .65s ease;
-        }
-
-        .reveal.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* KUSTOM MODAL PENDAFTARAN (NON-TAILWIND BIAR GAK BENTROK) */
-        .modal-overlay {
-            position: fixed; inset: 0; z-index: 999;
-            background: rgba(8, 22, 47, 0.6); backdrop-filter: blur(4px);
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: .3s ease; padding: 20px;
-        }
-        .modal-overlay.is-open { opacity: 1; pointer-events: auto; }
-        .modal-box {
-            background: #fff; width: 100%; max-width: 480px; border-radius: 24px;
-            padding: 32px; position: relative; transform: translateY(20px) scale(0.95);
-            transition: .3s ease; box-shadow: 0 24px 60px rgba(0,0,0,0.15);
-        }
-        .modal-overlay.is-open .modal-box { transform: translateY(0) scale(1); }
-        .modal-close {
-            position: absolute; top: 16px; right: 16px; border: none; background: #f0f4f8;
-            width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #516077;
-            display: grid; place-items: center; transition: 0.2s; font-size: 18px; font-weight: bold;
-        }
-        .modal-close:hover { background: #e1e9f5; }
-        .modal-box h3 { font-size: 24px; color: var(--navy); margin-bottom: 8px; text-align: center; font-family: 'Montserrat', sans-serif;}
-        .modal-box p.subtitle { color: var(--muted); font-size: 14px; margin-bottom: 24px; text-align: center;}
-        .form-group { margin-bottom: 16px; text-align: left; }
-        .form-group label { display: block; font-size: 13px; font-weight: 700; color: #3e4b63; margin-bottom: 6px; }
-        .form-group input { 
-            width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid #dce4ef;
-            font-family: inherit; font-size: 14px; outline: none; transition: .2s; background: #fff;
-        }
-        .form-group input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .alert-box { padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 700; margin-bottom: 20px; display: none; text-align: center; }
-        .alert-box.success { background: #dffcf0; color: #059669; border: 1px solid #8ef0c1; display: block; }
-        .alert-box.error { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; display: block; }
-
-        @media (max-width: 1020px) {
-            .nav-links,
-            .nav-actions { display: none; }
-            .mobile-toggle { display: inline-grid; place-items: center; }
-            .hero-grid, .split, .automation-grid, .pos-grid, .why-grid { grid-template-columns: 1fr; }
-            .hero { padding-top: 136px; }
-            .hero-visual { min-height: auto; }
-            .dashboard-card { margin: 30px auto 0; }
-            .feature-grid, .pricing-grid { grid-template-columns: 1fr; }
-            .wide-card { grid-column: span 1; }
-            .price-card.featured { transform: none; }
-            .audience-grid, .mini-feature-grid { grid-template-columns: repeat(3, 1fr); }
-            .integration-card { position: static; }
-            .phone-mockup { margin-inline: auto; }
-        }
-
-        @media (max-width: 720px) {
-            .container { width: min(100% - 28px, var(--container)); }
-            .section { padding: 78px 0; }
-            .hero { min-height: auto; padding-bottom: 70px; }
-            .hero h1 { font-size: clamp(42px, 14vw, 58px); }
-            .hero p.lead { font-size: 16px; }
-            .hero-actions .btn { width: 100%; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .stat:nth-child(2) { border-right: 0; }
-            .dash-body { grid-template-columns: 1fr; }
-            .sidebar { display: none; }
-            .dash-main { padding: 20px; }
-            .metric-row, .check-grid, .pos-list, .why-points { grid-template-columns: 1fr; }
-            .float-order, .float-pos { position: static; margin: 14px auto 0; width: 100%; }
-            .dashboard-card { border-radius: 24px; }
-            .phone-screen { min-height: auto; }
-            .audience-grid, .mini-feature-grid { grid-template-columns: repeat(2, 1fr); }
-            .program-card { padding: 34px 22px; border-radius: 28px; }
-            .price-card { min-height: auto; }
-            .floating-wa { width: 54px; height: 54px; right: 16px; bottom: 16px; }
-            .grid-2 { grid-template-columns: 1fr; gap: 0; }
-        }
-
-        @media (max-width: 430px) {
-            .audience-grid, .mini-feature-grid { grid-template-columns: 1fr; }
-            .logo-row { grid-template-columns: 1fr; }
-            .metric strong { font-size: 18px; }
+        .marquee-content {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee 20s linear infinite;
+        }
+        .marquee-content:hover {
+            animation-play-state: paused;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
         }
     </style>
 </head>
-<body>
-    <header class="topbar" id="topbar">
-        <div class="container nav">
-            <a href="#" class="brand" aria-label="iMersWAstore">
-                <img src="https://imersnesia.com/wp-content/uploads/2026/06/logo-teks-imerswastore-1.png" alt="iMersWAstore Logo" style="height: 52px; width: auto; object-fit: contain;">
-            </a>
+<body class="text-slate-800 antialiased pb-24">
 
-            <nav class="nav-links" aria-label="Navigasi utama">
-                <a href="#fitur">Fitur</a>
-                <a href="#mitra">Mitra</a>
-                <a href="#pos">POS Kasir</a>
-                <a href="#harga">Harga</a>
-                <a href="#faq">FAQ</a>
-            </nav>
+    <!-- Screen Loading / Error -->
+    <div id="loaderScreen" class="fixed inset-0 bg-white z-[200] flex flex-col items-center justify-center">
+        <i data-lucide="store" class="w-12 h-12 text-emerald-500 animate-bounce mb-4"></i>
+        <h2 class="text-lg font-bold text-slate-800" id="loaderText">Membuka Toko...</h2>
+    </div>
 
-            <div class="nav-actions">
-                <a class="login" href="login.html">Masuk</a>
-                <a class="mini-btn" href="#" onclick="openModal(event)">Mulai Gratis</a>
+    <!-- Header Toko -->
+    <header class="bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div id="storeLogo" class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center overflow-hidden border border-slate-100 shrink-0">
+                    <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-900 leading-tight truncate max-w-[200px]" id="storeName">Nama Toko</h1>
+                    <div class="flex items-center text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded w-max mt-0.5 border border-emerald-100">
+                        <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i> Terverifikasi
+                    </div>
+                </div>
             </div>
-
-            <button class="mobile-toggle" aria-label="Buka menu">☰</button>
-        </div>
-
-        <!-- MOBILE MENU CONTAINER -->
-        <div id="mobileMenu" class="mobile-menu">
-            <nav class="mobile-nav">
-                <a href="#fitur">Fitur</a>
-                <a href="#mitra">Mitra</a>
-                <a href="#pos">POS Kasir</a>
-                <a href="#harga">Harga</a>
-                <a href="#faq">FAQ</a>
-                <a href="login.html">Masuk Admin</a>
-                <a href="#" onclick="openModal(event)" class="mini-btn">Mulai Gratis Sekarang</a>
-            </nav>
+            
+            <button onclick="toggleCart()" class="relative p-2 text-slate-600 hover:bg-slate-50 rounded-full transition-colors">
+                <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+                <span id="cartBadge" class="absolute top-0 right-0 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center transform scale-0 transition-transform shadow-sm">0</span>
+            </button>
         </div>
     </header>
 
-    <main>
-        <section class="hero section">
-            <div class="container hero-grid">
-                <div class="hero-copy reveal">
-                    <span class="eyebrow">🚀 Gratis 1 Tahun Untuk UMKM Indonesia</span>
-                    <h1>Jualan Online & Offline Dalam <span class="gradient-text">Satu Platform</span></h1>
-                    <p class="lead">
-                        Bangun toko online profesional, kelola penjualan di toko fisik dengan POS Kasir,
-                        dan otomatisasi WhatsApp dalam satu sistem yang mudah digunakan.
-                    </p>
-                    <p class="lead">
-                        Cocok untuk UMKM, toko retail, kuliner, reseller, dan bisnis lokal yang ingin berkembang tanpa biaya mahal.
-                    </p>
-
-                    <div class="hero-offers" aria-label="Penawaran iMersWAstore">
-                        <span class="offer-pill">🛍️ Kategori Produk</span>
-                        <span class="offer-pill">🎟️ Kupon Diskon</span>
-                        <span class="offer-pill">🚚 Ongkir Custom</span>
-                    </div>
-
-                    <div class="hero-actions">
-                        <a href="#" onclick="openModal(event)" class="btn btn-primary">Mulai Gratis Sekarang →</a>
-                        <a href="#fitur" class="btn btn-secondary">Lihat Fitur</a>
-                    </div>
-
-                    <div class="trust">
-                        <div class="avatars" aria-hidden="true">
-                            <span class="avatar">UM</span>
-                            <span class="avatar">RT</span>
-                            <span class="avatar">CS</span>
-                            <span class="avatar">+</span>
-                        </div>
-                        <span>Dipercaya pelaku UMKM, toko lokal, reseller, dan agency digital.</span>
-                    </div>
-                </div>
-
-                <div class="hero-visual reveal">
-                    <div class="float-order">
-                        <span class="check">✓</span>
-                        <div>
-                            <strong>Order Masuk!</strong>
-                            <span>Checkout ke WhatsApp</span>
-                        </div>
-                    </div>
-
-                    <div class="dashboard-card" aria-label="Dashboard iMersWAstore">
-                        <div class="browser-dots">
-                            <span class="dot red"></span>
-                            <span class="dot yellow"></span>
-                            <span class="dot green"></span>
-                            <span>toko.imerswastore.com</span>
-                        </div>
-                        <div class="dash-body">
-                            <aside class="sidebar">
-                                <div class="menu-label">MENU</div>
-                                <div class="side-item active"><span class="side-icon"></span>Dashboard</div>
-                                <div class="side-item"><span class="side-icon"></span>Produk</div>
-                                <div class="side-item"><span class="side-icon"></span>Order WA</div>
-                                <div class="side-item"><span class="side-icon"></span>POS Kasir</div>
-                            </aside>
-                            <div class="dash-main">
-                                <div class="dash-head">
-                                    <div>
-                                        <h3>Ringkasan Hari Ini</h3>
-                                        <span>Senin, 26 Mei</span>
-                                    </div>
-                                    <div class="mini-avatar">T</div>
-                                </div>
-
-                                <div class="metric-row">
-                                    <div class="metric">
-                                        <small>Pendapatan</small>
-                                        <strong>Rp 2.4M</strong>
-                                    </div>
-                                    <div class="metric">
-                                        <small>Pesanan Baru</small>
-                                        <strong>24 Order</strong>
-                                    </div>
-                                </div>
-
-                                <div class="chart">
-                                    <div class="chart-title">Statistik Penjualan</div>
-                                    <div class="bars" aria-hidden="true">
-                                        <span class="bar" style="height: 30%"></span>
-                                        <span class="bar" style="height: 45%"></span>
-                                        <span class="bar" style="height: 65%"></span>
-                                        <span class="bar" style="height: 58%"></span>
-                                        <span class="bar" style="height: 86%"></span>
-                                        <span class="bar" style="height: 44%"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="float-pos">
-                        <strong>POS Kasir Terintegrasi</strong>
-                        <span>Online + offline dalam satu dashboard.</span>
-                        <div class="cart-line"><span>Kopi Susu Aren x2</span><b>Rp 30.000</b></div>
-                        <div class="cart-line"><span>Croissant x1</span><b>Rp 20.000</b></div>
-                        <div class="cart-total"><span>Total</span><span>Rp 50.000</span></div>
-                    </div>
+    <!-- Main Content -->
+    <main class="max-w-3xl mx-auto px-4 py-6">
+        
+        <!-- ANNOUNCEMENT BAR (Teks Berjalan) -->
+        <div id="announcementBar" class="hidden mb-6 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[11px] sm:text-xs py-2.5 px-4 font-bold rounded-2xl shadow-sm relative z-30 overflow-hidden border border-orange-400">
+            <div class="marquee-container">
+                <div id="announcementContent" class="marquee-content tracking-wide uppercase">
+                    <!-- Diisi via JS -->
                 </div>
             </div>
-        </section>
+        </div>
 
-        <section class="stats" aria-label="Statistik iMersWAstore">
-            <div class="container stats-grid reveal">
-                <div class="stat"><strong>540+</strong><span>UMKM Bergabung</span></div>
-                <div class="stat"><strong>36K+</strong><span>Produk Terkelola</span></div>
-                <div class="stat"><strong>24/7</strong><span>Dukungan Sistem</span></div>
-                <div class="stat"><strong>1</strong><span>Platform Lengkap</span></div>
+        <!-- BANNER EKSKLUSIF TOKO -->
+        <div id="storeBanner" class="hidden mb-6 rounded-2xl overflow-hidden shadow-lg w-full relative border border-slate-100 group">
+            <img id="storeBannerImg" src="" class="w-full h-40 sm:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent pointer-events-none"></div>
+        </div>
+
+        <!-- Banner Search -->
+        <div class="relative bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-5 mb-6 shadow-md overflow-hidden text-white border border-emerald-400">
+            <div class="absolute -right-4 -bottom-4 opacity-20">
+                <i data-lucide="shopping-bag" class="w-32 h-32"></i>
             </div>
-        </section>
-
-        <section class="features section" id="fitur">
-            <div class="container">
-                <div class="section-head reveal">
-                    <span class="eyebrow">Semua Kebutuhan UMKM</span>
-                    <h2>Semua Yang Dibutuhkan UMKM Dalam Satu Platform</h2>
-                    <p>Tidak perlu banyak aplikasi. Tidak perlu biaya bulanan mahal. Tidak perlu sistem yang rumit.</p>
+            
+            <h2 class="text-xl font-bold mb-1 relative z-10">Selamat Datang!</h2>
+            <p class="text-xs text-emerald-50 mb-4 relative z-10 max-w-[80%]">Pilih produk yang Anda inginkan dan pesan langsung via WhatsApp.</p>
+            
+            <div class="relative z-10">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
                 </div>
-
-                <div class="feature-grid">
-                    <article class="feature-card reveal">
-                        <div class="icon-box">🛒</div>
-                        <h3>Katalog & Kategori Pintar</h3>
-                        <p>Etalase produk dengan filter kategori yang rapi, varian produk lengkap, dan badge promo untuk menarik pembeli.</p>
-                    </article>
-
-                    <article class="feature-card reveal">
-                        <div class="icon-box">🎟️</div>
-                        <h3>Kupon Diskon & Ongkir</h3>
-                        <p>Manjakan pelanggan dengan fitur kode kupon (persentase/nominal) dan atur tarif ongkos kirim sesuai area dengan mudah.</p>
-                    </article>
-
-                    <article class="feature-card reveal">
-                        <div class="icon-box">📱</div>
-                        <h3>Checkout ke WhatsApp</h3>
-                        <p>Sistem menghitung Subtotal, Ongkir, dan Diskon secara otomatis sebelum pesanan dikirim ke WhatsApp bisnis Anda.</p>
-                    </article>
-
-                    <article class="feature-card wide-card reveal">
-                        <span class="tag">FITUR UNGGULAN</span>
-                        <h3>POS Kasir Modern Untuk Toko Fisik</h3>
-                        <p>Gunakan iMersWAstore sebagai kasir modern untuk warung, toko, cafe, atau bisnis offline. Stok otomatis berkurang dan laporan penjualan tercatat rapi.</p>
-                        <div class="pos-mini">
-                            <div class="cart-line"><span>Keranjang Kasir</span><b>Rp 150.000</b></div>
-                            <div class="cart-line"><span>Kopi Susu Aren x2</span><b>Rp 50.000</b></div>
-                            <div class="cart-line"><span>Snack x5</span><b>Rp 100.000</b></div>
-                            <div class="pay">Bayar Sekarang</div>
-                        </div>
-                    </article>
-
-                    <article class="feature-card reveal">
-                        <div class="icon-box">📊</div>
-                        <h3>Laporan Penjualan</h3>
-                        <p>Pantau performa bisnis dengan laporan penjualan, pelanggan, produk terlaris, dan export Excel.</p>
-                    </article>
-
-                    <!-- 3 FITUR UPDATE V5.1 -->
-                    <article class="feature-card reveal">
-                        <div class="icon-box" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(249, 115, 22, 0.30)); color: #ea580c;">🎯</div>
-                        <h3>Ads Pixel Tracking</h3>
-                        <p>Tanamkan Pixel Facebook, TikTok, dan Google Analytics secara instan. Lacak konversi untuk kebutuhan retargeting iklan Anda.</p>
-                    </article>
-
-                    <article class="feature-card reveal">
-                        <div class="icon-box" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(52, 211, 153, 0.30)); color: #059669;">👥</div>
-                        <h3>Manajemen Staf Kasir</h3>
-                        <p>Delegasikan toko dengan tenang. Buat sub-akun staf kasir dengan hak akses khusus (hanya bisa akses POS Kasir dan Pesanan).</p>
-                    </article>
-
-                    <article class="feature-card reveal">
-                        <div class="icon-box" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(252, 211, 77, 0.30)); color: #d97706;">🧾</div>
-                        <h3>Tax & Service Charge</h3>
-                        <p>Cocok untuk bisnis F&B. Sistem otomatis menghitung PPN dan Biaya Layanan ke Grand Total yang langsung tercetak di struk kasir.</p>
-                    </article>
-                </div>
+                <input type="search" id="searchProd" autocomplete="off" spellcheck="false" oninput="filterProducts()" class="block w-full pl-10 pr-3 py-2.5 border-none rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 shadow-sm" placeholder="Cari produk di sini...">
             </div>
-        </section>
+        </div>
 
-        <!-- SECTION MITRA DINAMIS (TEASER 8 TOKO) -->
-        <section class="mitra-section section" id="mitra">
-            <div class="container">
-                <div class="section-head reveal">
-                    <span class="eyebrow">Jelajahi Mitra</span>
-                    <h2>Dipercaya Oleh Ekosistem UMKM Digital</h2>
-                    <p>Ribuan brand lokal telah mempercayakan etalase digital mereka pada infrastruktur iMersWAstore.</p>
-                </div>
+        <!-- KATEGORI FILTER -->
+        <div id="categoryFilterContainer" class="flex overflow-x-auto gap-2 mb-6 pb-2 hide-scrollbar snap-x hidden">
+            <!-- Diisi dari JS -->
+        </div>
 
-                <div id="mitraContainer" class="mitra-grid reveal">
-                    <!-- Loading Skeleton -->
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--muted);">
-                        <p>Memuat daftar mitra...</p>
-                    </div>
-                </div>
-
-                <!-- Tombol Link Pindah ke Halaman Mitra -->
-                <div id="loadMoreContainer" style="display: none; text-align: center; margin-top: 40px;" class="reveal">
-                    <a href="mitra.html" class="btn btn-secondary" style="border-radius: 99px; padding: 0 30px;">
-                        Lihat Semua Mitra Kami →
-                    </a>
-                </div>
+        <!-- SECTION FLASH SALE / PROMO -->
+        <div id="promoSection" class="hidden mb-10">
+            <div class="flex items-center gap-3 mb-4">
+                <h3 class="font-black text-slate-800 text-lg flex items-center gap-2">
+                    <i data-lucide="flame" class="w-6 h-6 text-orange-500 fill-orange-500 animate-pulse"></i> Spesial Promo
+                </h3>
+                <div class="h-px bg-slate-200 flex-1"></div>
             </div>
-        </section>
-
-        <section class="section">
-            <div class="container split">
-                <div class="copy-block reveal">
-                    <span class="eyebrow">Toko Online Siap Jualan</span>
-                    <h2>Toko Online yang Benar-Benar Membantu Jualan</h2>
-                    <p>Tampilkan produk Anda dengan tampilan profesional. Pelanggan bisa melihat produk, memilih, checkout, lalu pesanan langsung masuk ke WhatsApp.</p>
-                    <p>Lebih cepat. Lebih mudah. Lebih dekat dengan pelanggan.</p>
-
-                    <div class="steps">
-                        <div class="step"><span class="step-number">1</span>Melihat produk</div>
-                        <div class="step"><span class="step-number">2</span>Memilih produk</div>
-                        <div class="step"><span class="step-number">3</span>Checkout</div>
-                        <div class="step"><span class="step-number">4</span>Pesanan masuk ke WhatsApp</div>
-                    </div>
-                </div>
-
-                <div class="phone-mockup reveal" aria-label="Contoh toko online mobile">
-                    <div class="phone-screen">
-                        <div class="phone-top">
-                            <small>iMersWAstore Demo</small>
-                            <h3>Katalog Produk Mobile Friendly</h3>
-                        </div>
-                        <div class="product-list">
-                            <div class="product-item">
-                                <div class="product-img"></div>
-                                <div><strong>Kopi Susu Aren</strong><span>Rp 18.000</span></div>
-                            </div>
-                            <div class="product-item">
-                                <div class="product-img"></div>
-                                <div><strong>Rice Bowl Ayam</strong><span>Rp 28.000</span></div>
-                            </div>
-                            <div class="product-item">
-                                <div class="product-img"></div>
-                                <div><strong>Paket Hemat</strong><span>Rp 45.000</span></div>
-                            </div>
-                            <div class="product-item">
-                                <div class="product-img"></div>
-                                <div><strong>Brownies Box</strong><span>Rp 55.000</span></div>
-                            </div>
-                        </div>
-                        <div class="checkout-bar">Checkout ke WhatsApp</div>
-                    </div>
-                </div>
+            <div id="promoGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <!-- Promo items via JS -->
             </div>
-        </section>
+        </div>
 
-        <section class="automation section" id="automation">
-            <div class="container automation-grid">
-                <div class="integration-card reveal">
-                    <span class="inline-flex items-center px-3 py-1.5 rounded-full bg-blue-900/40 text-blue-200 border border-blue-500/30 text-xs font-bold mb-4">Order WhatsApp</span>
-                    <h3 style="font-size: clamp(28px, 4vw, 36px); letter-spacing: -0.04em;">Order Masuk Langsung ke WhatsApp Seller</h3>
-                    <p>Setiap pesanan bisa diarahkan ke WhatsApp toko Anda. Untuk kebutuhan lanjutan, integrasi multi-gateway tersedia agar pengiriman struk dan nota lebih praktis.</p>
-                    <div class="logo-row" style="grid-template-columns: repeat(2, 1fr);">
-                        <a href="#" class="logo-pill hover:bg-white/20 transition-all text-white no-underline" style="font-size: 17px; min-height: 70px;">Fonnte</a>
-                        <a href="#" class="logo-pill hover:bg-white/20 transition-all text-white no-underline" style="font-size: 17px; min-height: 70px;">WaPlus</a>
-                        <a href="#" class="logo-pill hover:bg-white/20 transition-all text-white no-underline" style="font-size: 17px; min-height: 70px;">StarSender</a>
-                        <a href="#" class="logo-pill hover:bg-white/20 transition-all text-white no-underline" style="font-size: 17px; min-height: 70px;">Xsender</a>
-                    </div>
-                </div>
+        <!-- BANNER TENGAH / PROMO DINAMIS -->
+        <div id="midBannerContainer" class="hidden mb-6 rounded-2xl overflow-hidden shadow-sm w-full relative group cursor-pointer hover:shadow-md transition-all">
+            <img id="midBannerImg" src="" class="w-full h-auto max-h-48 sm:max-h-64 object-cover transform group-hover:scale-[1.02] transition-transform duration-500">
+        </div>   
 
-                <div class="check-grid reveal">
-                    <div class="check-item"><span class="check-badge">✓</span>Notifikasi Pesanan Masuk</div>
-                    <div class="check-item"><span class="check-badge">✓</span>Invoice & Struk Otomatis</div>
-                    <div class="check-item"><span class="check-badge">✓</span>Pesan Sambutan Toko Baru</div>
-                    <div class="check-item"><span class="check-badge">✓</span>Notifikasi Kasir POS Offline</div>
-                    <div class="check-item"><span class="check-badge">✓</span>Kustom Teks & Tag Dinamis</div>
-                    <div class="check-item"><span class="check-badge">✓</span>Tautan Lupa Password OTP</div>
-                    <div class="check-item"><span class="check-badge">✓</span>Multi-Provider Gateway</div>
-                    <div class="check-item"><span class="check-badge">✓</span>Langsung melalui WhatsApp</div>
-                </div>
+        <!-- Section Title Produk Reguler -->
+        <div id="regularTitleSection" class="hidden mb-4">
+            <h3 class="font-bold text-slate-800 flex items-center gap-2 bg-white/50 backdrop-blur py-2 px-3 rounded-lg w-max border border-slate-100 shadow-sm">
+                <i data-lucide="grid" class="w-4 h-4 text-emerald-500"></i> Katalog Produk
+            </h3>
+        </div>
+
+        <!-- Product Grid -->
+        <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <!-- Isi dari JS -->
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SECTION BLOG / ARTIKEL (THE HOLY TRINITY)  -->
+        <!-- ========================================== -->
+        <div id="blogSection" class="hidden mt-12 border-t border-slate-200 pt-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2 text-lg">
+                    <i data-lucide="book-open" class="w-5 h-5 text-indigo-500"></i> Artikel & Info
+                </h3>
             </div>
-        </section>
-
-        <section class="pos-section section" id="pos">
-            <div class="container pos-panel reveal">
-                <div class="pos-grid">
-                    <div class="copy-block">
-                        <span class="eyebrow">POS Kasir Untuk Toko Fisik</span>
-                        <h2>Satu Sistem Untuk Toko Online dan Toko Fisik</h2>
-                        <p>Punya warung, toko, cafe, atau bisnis offline? Gunakan iMersWAstore sebagai POS Kasir modern yang bisa dipakai dari HP, tablet, atau laptop.</p>
-
-                        <ul class="pos-list">
-                            <li>🧾 Transaksi Cepat</li>
-                            <li>📱 HP, Tablet, Laptop</li>
-                            <li>📦 Stok Otomatis</li>
-                            <li>👥 Data Pelanggan</li>
-                            <li>📊 Laporan Harian</li>
-                            <li>📈 Analisa Penjualan</li>
-                            <li>💳 Tunai & QRIS</li>
-                            <li>🖨️ Cetak Struk Opsional</li>
-                        </ul>
-                    </div>
-
-                    <div class="terminal" aria-label="Simulasi POS Kasir">
-                        <div class="terminal-head">
-                            <strong>Kasir Hari Ini</strong>
-                            <span>Online</span>
-                        </div>
-                        <div class="terminal-body">
-                            <div class="receipt-row"><span>Produk terjual</span><b>128 item</b></div>
-                            <div class="receipt-row"><span>Transaksi</span><b>42 order</b></div>
-                            <div class="receipt-row"><span>QRIS</span><b>Rp 1.250.000</b></div>
-                            <div class="receipt-row"><span>Tunai</span><b>Rp 860.000</b></div>
-                            <div class="receipt-total"><span>Total</span><span>Rp 2.110.000</span></div>
-                            <div class="pay-btn">Export Laporan</div>
-                        </div>
-                    </div>
-                </div>
+            <div id="blogGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Blog items via JS -->
             </div>
-        </section>
-
-        <section class="products section">
-            <div class="container">
-                <div class="section-head reveal">
-                    <span class="eyebrow">Kelola Produk Lebih Mudah</span>
-                    <h2>Produk, Stok, dan Inventori Lebih Rapi</h2>
-                    <p>Semua data produk bisa diatur dari satu dashboard yang sederhana dan nyaman dipakai.</p>
-                </div>
-
-                <div class="mini-feature-grid reveal">
-                    <div class="mini-feature">✔ Produk Unlimited</div>
-                    <div class="mini-feature">✔ Kategori Produk</div>
-                    <div class="mini-feature">✔ Foto Produk</div>
-                    <div class="mini-feature">✔ Harga & Diskon</div>
-                    <div class="mini-feature">✔ Status Stok</div>
-                    <div class="mini-feature">✔ Produk Favorit</div>
-                    <div class="mini-feature">✔ Produk Terlaris</div>
-                    <div class="mini-feature">✔ Manajemen Inventori</div>
-                </div>
-            </div>
-        </section>
-
-        <section class="audience section">
-            <div class="container">
-                <div class="section-head reveal">
-                    <span class="eyebrow">Cocok Untuk Banyak Bisnis</span>
-                    <h2>Dari Warung Sampai Agency, Semua Bisa Pakai</h2>
-                    <p>iMersWAstore dibuat fleksibel untuk berbagai jenis UMKM dan bisnis lokal.</p>
-                </div>
-
-                <div class="audience-grid reveal">
-                    <div class="audience-card"><span>🍜</span>Rumah Makan</div>
-                    <div class="audience-card"><span>☕</span>Coffee Shop</div>
-                    <div class="audience-card"><span>🍰</span>Bakery</div>
-                    <div class="audience-card"><span>🛒</span>Minimarket</div>
-                    <div class="audience-card"><span>🏪</span>Toko Kelontong</div>
-                    <div class="audience-card"><span>👗</span>Fashion</div>
-                    <div class="audience-card"><span>🧕</span>Hijab</div>
-                    <div class="audience-card"><span>🧴</span>Skincare</div>
-                    <div class="audience-card"><span>🎁</span>Gift Shop</div>
-                    <div class="audience-card"><span>🐟</span>Frozen Food</div>
-                    <div class="audience-card"><span>📦</span>Reseller</div>
-                    <div class="audience-card"><span>🚚</span>Dropshipper</div>
-                </div>
-            </div>
-        </section>
-
-        <section class="umkm-program section" id="gratis">
-            <div class="container">
-                <div class="program-card reveal">
-                    <span class="eyebrow">Program Khusus UMKM Indonesia</span>
-                    <h2>GRATIS 1 TAHUN Untuk UMKM</h2>
-                    <p>
-                        Kami percaya UMKM adalah tulang punggung ekonomi Indonesia. Karena itu kami menyediakan
-                        akses gratis 1 tahun untuk pelaku UMKM yang memenuhi syarat.
-                    </p>
-                    <p>Tanpa biaya setup. Tanpa biaya bulanan. Cukup daftar dan mulai jualan.</p>
-                    <a href="#" onclick="openModal(event)" class="btn btn-primary" style="margin-top: 20px;">Daftar Gratis →</a>
-                </div>
-            </div>
-        </section>
-
-        <section class="pricing section" id="harga">
-            <div class="container">
-                <div class="section-head reveal">
-                    <span class="eyebrow">Paket Harga</span>
-                    <h2>Pilih Paket Pertumbuhan Anda</h2>
-                    <p>Harga ringan untuk UMKM, reseller, freelancer, dan agency yang ingin bergerak lebih cepat.</p>
-                </div>
-
-                <div class="pricing-grid">
-                    <article class="price-card reveal">
-                        <h3>Starter UMKM</h3>
-                        <p class="price-desc">Gratis 1 tahun untuk mulai jualan online tanpa biaya mahal.</p>
-                        <div class="price">Rp 0</div>
-                        <ul class="simple-list">
-                            <li>Semua Fitur Starter</li>
-                            <li>POS Kasir Modern</li>
-                            <li>Kupon Diskon & Ongkir</li>
-                            <li>Integrasi Fonnte / WaPlus</li>
-                            <li>WhatsApp Automation</li>
-                            <li>Halaman Legal & ToS</li>
-                            <li>Laporan Penjualan</li>
-                        </ul>
-                        <a href="#" onclick="openModal(event)" class="btn btn-secondary">Daftar Gratis</a>
-                    </article>
-
-                    <article class="price-card featured reveal">
-                        <div class="popular">PALING POPULER</div>
-                        <h3>Agency Lifetime</h3>
-                        <p class="price-desc">Untuk reseller, freelancer, dan agency jasa pembuatan website.</p>
-                        <div class="price">Rp 49.000 <span>Agency Lifetime</span></div>
-                        <ul class="simple-list">
-                            <li>Semua Fitur Lifetime</li>
-                            <li>Unlimited User</li>
-                            <li>Unlimited Toko</li>
-                            <li>Unlimited Client</li>
-                            <li>Bisa Dijual Kembali</li>
-                            <li>Prioritas Update</li>
-                            <li>Hak Kelola Banyak Bisnis</li>
-                        </ul>
-                        <a href="#" onclick="openModal(event)" class="btn btn-secondary" style="color:var(--navy); background:white;">Pilih Agency Lifetime</a>
-                    </article>
-
-                    <article class="price-card reveal">
-                        <h3>Lifetime</h3>
-                        <p class="price-desc">Bayar sekali, pakai selamanya untuk operasional online dan offline.</p>
-                        <div class="price">Rp 29.000 <span>Lifetime</span></div>
-                        <ul class="simple-list">
-                            <li>Semua Fitur Starter</li>
-                            <li>POS Kasir Modern</li>
-                            <li>Kupon Diskon & Ongkir</li>
-                            <li>Integrasi Fonnte / WaPlus</li>
-                            <li>WhatsApp Automation</li>
-                            <li>Halaman Legal & ToS</li>
-                            <li>Laporan Penjualan</li>
-                        </ul>
-                        <a href="#" onclick="openModal(event)" class="btn btn-secondary">Jadi Agency</a>
-                    </article>
-                </div>
-            </div>
-        </section>
-
-        <section class="why section">
-            <div class="container why-grid">
-                <div class="why-card reveal">
-                    <h2>Kenapa Memilih iMersWAstore?</h2>
-                    <p>
-                        Karena bisnis kecil tidak membutuhkan software mahal.
-                        Mereka membutuhkan sistem yang mudah digunakan, terjangkau,
-                        bisa dipakai dari HP, dan benar-benar membantu meningkatkan penjualan.
-                    </p>
-                </div>
-
-                <div class="why-points reveal">
-                    <div class="check-item"><span class="check-badge">✓</span>Mudah digunakan</div>
-                    <div class="check-item"><span class="check-badge">✓</span>Harga terjangkau</div>
-                    <div class="check-item"><span class="check-badge">✓</span>Bisa dipakai dari HP</div>
-                    <div class="check-item"><span class="check-badge">✓</span>Membantu meningkatkan penjualan</div>
-                    <div class="check-item"><span class="check-badge">✓</span>Terhubung ke WhatsApp</div>
-                    <div class="check-item"><span class="check-badge">✓</span>Online dan offline dalam satu sistem</div>
-                </div>
-            </div>
-        </section>
-
-        <section class="faq section" id="faq">
-            <div class="container">
-                <div class="section-head reveal">
-                    <span class="eyebrow">Pertanyaan Umum</span>
-                    <h2>Yang Sering Ditanyakan</h2>
-                    <p>Jawaban singkat sebelum Anda mulai menggunakan iMersWAstore.</p>
-                </div>
-
-                <div class="faq-list reveal">
-                    <details open>
-                        <summary>Apakah harus punya website sebelumnya?</summary>
-                        <p>Tidak. Anda langsung mendapatkan toko online siap pakai.</p>
-                    </details>
-                    <details>
-                        <summary>Apakah bisa digunakan di HP?</summary>
-                        <p>Bisa. Seluruh fitur dapat digunakan melalui smartphone.</p>
-                    </details>
-                    <details>
-                        <summary>Apakah POS Kasir sudah termasuk?</summary>
-                        <p>Ya, tersedia pada paket Lifetime dan Agency.</p>
-                    </details>
-                    <details>
-                        <summary>Apakah wajib menggunakan Fonnte atau WaPlus?</summary>
-                        <p>Tidak wajib, tetapi integrasi tersedia untuk kebutuhan otomatisasi WhatsApp.</p>
-                    </details>
-                    <details>
-                        <summary>Apakah ada biaya bulanan?</summary>
-                        <p>Tidak ada untuk paket Lifetime dan Agency.</p>
-                    </details>
-                    <details>
-                        <summary>Apakah lisensi Agency bisa dijual kembali?</summary>
-                        <p>Ya. Paket Agency dirancang untuk reseller, freelancer, dan agency yang ingin menjual layanan kepada banyak klien.</p>
-                    </details>
-                </div>
-            </div>
-        </section>
-
-        <section class="cta" id="cta">
-            <div class="container reveal">
-                <span class="eyebrow">Saatnya Naik Kelas</span>
-                <h2>Jangan Hanya Bergantung Pada Marketplace</h2>
-                <p>
-                    Miliki toko online sendiri, kelola pelanggan sendiri, dan jalankan jualan online serta offline
-                    dalam satu sistem. iMersWAstore adalah toko online, POS Kasir, dan WhatsApp Automation untuk UMKM Indonesia.
-                </p>
-                <a href="#" onclick="openModal(event)" class="btn btn-primary">Mulai Gratis Sekarang →</a>
-            </div>
-        </section>
+        </div>
+        
     </main>
 
-    <a class="floating-wa" href="#" onclick="openModal(event)" aria-label="Mulai Daftar">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M12 8V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-    </a>
+    <!-- Footer Branding & Social Media -->
+    <footer class="max-w-3xl mx-auto px-4 py-8 text-center border-t border-slate-200 mt-8">
+        <!-- Tulisan "Powered by" ini jadi sensor Secret Tap-nya -->
+        <p id="poweredByText" class="text-[10px] text-slate-400 mb-4 cursor-pointer select-none">Powered by <b>iMersWAstore</b></p>
+        
+        <!-- Social Media Container -->
+        <div id="footerSocialMedia" class="flex items-center justify-center gap-3 mb-6">
+            <!-- Diisi dari JS -->
+        </div>
 
-    <!-- BAGIAN FOOTER STATIS (HARDCODE LINK) -->
-    <footer class="footer">
-        <div class="container">
-            <p>© 2026 iMersWAstore. Karya Anak Bangsa untuk UMKM.</p>
-            <p>Toko Online • POS Kasir • WhatsApp Automation</p>
-            
-            <div style="margin-top:12px; display:flex; gap:16px; justify-content:center;">
-                <a href="syarat.html" style="color: #61dba5; font-size: 13px; text-decoration: none;" class="hover:text-emerald-400 transition-colors">Syarat & Ketentuan</a>
-                <a href="privacy.html" style="color: #61dba5; font-size: 13px; text-decoration: none;" class="hover:text-emerald-400 transition-colors">Kebijakan Privasi</a>
-            </div>
+        <!-- LEGAL LINKS -->
+        <div id="legalLinks" class="flex justify-center items-center gap-4 text-xs font-bold text-slate-500 flex-wrap">
+            <!-- Diisi dari JS -->
         </div>
     </footer>
 
-    <!-- MODAL PENDAFTARAN (NON-TAILWIND BIAR GAK BENTROK) -->
-    <div id="registerModal" class="modal-overlay" onclick="closeModal(event)">
-        <div class="modal-box" onclick="event.stopPropagation()">
-            <button class="modal-close" onclick="closeModal()">✕</button>
-            <h3>Daftar JualanPLUS</h3>
-            <p class="subtitle">Mulai digitalkan UMKM Anda sekarang. Gratis 14 Hari Trial!</p>
-            
-            <div id="alertBox" class="alert-box"></div>
-            
-            <form id="googleSheetForm">
-                <input type="hidden" name="action" value="create_account">
-                <input type="hidden" name="is_self_register" value="true">
-                
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Username</label>
-                        <input type="text" name="new_username" required placeholder="budi_store">
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" name="new_password" required placeholder="******">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" name="email" required placeholder="budi@email.com">
-                </div>
-                
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Nama Toko</label>
-                        <input type="text" name="nama_toko" required placeholder="Toko Berkah">
-                    </div>
-                    <div class="form-group">
-                        <label>Nomor WhatsApp</label>
-                        <input type="tel" name="wa_number" required placeholder="6281234...">
-                    </div>
-                </div>
-
-                <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
-                    <span id="btnText">Daftar & Buat Toko</span>
-                </button>
-            </form>
+    <!-- ========================================== -->
+    <!-- MODAL POP-UP PROMO (THE HOLY TRINITY)      -->
+    <!-- ========================================== -->
+    <div id="promoPopupModal" class="fixed inset-0 z-[250] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity" onclick="closePromoPopup()"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden z-10 transform transition-all scale-95 opacity-0" id="promoPopupContent">
+            <button onclick="closePromoPopup()" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-black/20 hover:bg-black/40 text-white rounded-full z-20 backdrop-blur transition-colors">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <img id="popupImg" src="" class="w-full h-48 sm:h-56 object-cover bg-slate-100">
+            <div class="p-6 text-center">
+                <p id="popupDesc" class="text-sm text-slate-600 mb-6 leading-relaxed font-medium"></p>
+                <a id="popupBtn" href="#" onclick="closePromoPopup()" class="inline-block w-full py-3.5 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold rounded-xl shadow-lg shadow-pink-500/30 transition-all transform active:scale-95"></a>
+            </div>
         </div>
     </div>
 
-    <script>
-        const topbar = document.getElementById('topbar');
+    <!-- ========================================== -->
+    <!-- MODAL TENTANG KAMI (THE HOLY TRINITY)      -->
+    <!-- ========================================== -->
+    <div id="aboutModal" class="fixed inset-0 z-[150] hidden">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeAboutModal()"></div>
+        <div class="absolute bottom-0 left-0 right-0 max-w-3xl mx-auto h-[85vh] bg-white rounded-t-3xl shadow-2xl flex flex-col transform transition-transform duration-300 translate-y-full" id="aboutContent">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-white rounded-t-3xl shrink-0">
+                <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2"><i data-lucide="info" class="w-5 h-5 text-blue-500"></i> Tentang Kami</h3>
+                <button onclick="closeAboutModal()" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 bg-slate-50 hide-scrollbar">
+                <div id="aboutText" class="prose prose-sm max-w-none text-slate-600 whitespace-pre-wrap leading-relaxed">
+                    <!-- Text Injected via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
 
-        function handleScroll() {
-            topbar.classList.toggle('is-scrolled', window.scrollY > 20);
-        }
+    <!-- ========================================== -->
+    <!-- MODAL DETAIL PRODUK (DENGAN VARIAN) -->
+    <!-- ========================================== -->
+    <div id="productDetailModal" class="fixed inset-0 z-[120] hidden">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeProductDetail()"></div>
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+             <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm text-left overflow-hidden z-10 transform transition-all scale-95 opacity-0 border border-slate-100 flex flex-col max-h-[90vh]" id="productDetailContent">
+                
+                <button onclick="closeProductDetail()" class="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur rounded-full text-slate-600 hover:bg-white z-20 shadow-sm transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+                
+                <!-- Badge Modal Detail -->
+                <div id="detailBadgeContainer" class="absolute top-3 left-3 z-10 hidden">
+                    <span id="detailBadgeText" class="bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-md shadow-md animate-pulse uppercase tracking-wider"></span>
+                </div>
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('is-visible');
-                }
-            });
-        }, { threshold: 0.12 });
+                <!-- Scrollable Content Area -->
+                <div class="overflow-y-auto flex-1 hide-scrollbar">
+                    <div class="aspect-square bg-slate-100 relative shrink-0">
+                        <img id="detailImg" src="" class="w-full h-full object-cover">
+                    </div>
+                    
+                    <div class="p-5">
+                        <h3 id="detailName" class="text-xl font-bold text-slate-800 mb-1 leading-tight">Nama Produk</h3>
+                        <p id="detailPriceUnit" class="text-emerald-600 font-black text-xl mb-4">Rp 0 <span class="text-sm text-slate-400 font-medium">/pcs</span></p>
+                        
+                        <!-- VARIANT SELECTION AREA -->
+                        <div id="variantSelectionArea" class="hidden mb-5 border-t border-slate-100 pt-4">
+                            <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-2 flex items-center gap-1"><i data-lucide="layers" class="w-3 h-3"></i> Pilih Varian</p>
+                            <div id="variantOptionsContainer" class="flex flex-wrap gap-2">
+                                <!-- Pilihan varian akan dirender di sini -->
+                            </div>
+                            <p id="variantErrorMsg" class="text-xs text-red-500 font-medium mt-2 hidden animate-pulse">Silakan pilih varian terlebih dahulu!</p>
+                        </div>
 
-        document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
-        window.addEventListener('scroll', handleScroll);
-        handleScroll();
+                        <div class="mb-5">
+                            <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> Deskripsi Produk</p>
+                            <p id="detailDesc" class="text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100 shadow-inner">Deskripsi produk...</p>
+                        </div>
+                    </div>
+                </div>
 
-        // ==========================================
-        // LOGIKA BURGER MENU HP (BARU)
-        // ==========================================
-        const mobileToggle = document.querySelector('.mobile-toggle');
-        const mobileMenu = document.getElementById('mobileMenu');
-        
-        if(mobileToggle && mobileMenu) {
-            mobileToggle.addEventListener('click', () => {
-                mobileMenu.classList.toggle('is-open');
-            });
+                <!-- Sticky Bottom Button -->
+                <div class="p-4 bg-white border-t border-slate-100 shrink-0">
+                    <button id="detailAddBtn" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl flex justify-center items-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i data-lucide="shopping-cart" class="w-5 h-5"></i> Tambah ke Keranjang
+                    </button>
+                </div>
+             </div>
+        </div>
+    </div>
 
-            // Tutup menu kalau salah satu link diklik
-            mobileMenu.querySelectorAll('a').forEach(link => {
-                link.addEventListener('click', () => {
-                    mobileMenu.classList.remove('is-open');
-                });
-            });
-        }
-
-        // ==========================================
-        // LOGIKA MODAL PENDAFTARAN
-        // ==========================================
-        const modal = document.getElementById('registerModal');
-        
-        function openModal(e) {
-            if(e) e.preventDefault();
-            document.getElementById('alertBox').style.display = 'none'; 
-            modal.classList.add('is-open');
-        }
-
-        function closeModal(e) {
-            if(e && e.target !== modal) return;
-            modal.classList.remove('is-open');
-        }
-
-        function showAlert(msg, isSuccess) {
-            const alertBox = document.getElementById('alertBox');
-            alertBox.innerText = msg;
-            alertBox.className = `alert-box ${isSuccess ? 'success' : 'error'}`;
-        }
-
-        // ==========================================
-        // ==========================================
-        // FETCH DATA MITRA DINAMIS
-        // ==========================================
-        const scriptURL = SETTING_SCRIPT_URL; // Gunakan URL dari atas
-        let allMitraData = [];
-        
-        async function loadMitra() {
-            const container = document.getElementById('mitraContainer');
+    <!-- ========================================== -->
+    <!-- MODAL KERANJANG & CHECKOUT PINTAR -->
+    <!-- ========================================== -->
+    
+    <!-- Floating Bottom Bar -->
+    <div id="bottomCartBar" class="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-4 transform translate-y-full transition-transform duration-300 z-40 shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
+        <div class="max-w-3xl mx-auto flex items-center justify-between">
+            <div>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Estimasi Subtotal</p>
+                <p class="text-xl font-black text-slate-800 leading-none mt-0.5" id="bottomCartTotal">Rp 0</p>
+            </div>
             
-            // LOGIKA BARU: Cek Local Storage (Cache Browser) biar instan!
-            const cachedMitra = sessionStorage.getItem('mitraDataCache');
-            if (cachedMitra) {
-                allMitraData = JSON.parse(cachedMitra);
-                renderMitraTeaser();
+            <button onclick="toggleCart()" class="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl text-sm font-bold flex items-center shadow-lg transition-colors">
+                Lihat Keranjang <span class="bg-white/20 text-white text-[10px] px-2 py-0.5 rounded-full ml-2 font-black" id="bottomCartItems">0</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Cart & Checkout Fullscreen -->
+    <div id="cartModal" class="fixed inset-0 z-50 hidden">
+        
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="toggleCart()"></div>
+        
+        <div class="absolute bottom-0 left-0 right-0 mx-auto w-full max-w-2xl h-[90vh] bg-white rounded-t-3xl shadow-2xl flex flex-col transform transition-transform duration-300 translate-y-full" id="cartContent">
+            
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-white rounded-t-3xl shrink-0">
+                <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2"><i data-lucide="shopping-cart" class="w-5 h-5 text-emerald-500"></i> Keranjang Belanja</h3>
+                <button onclick="toggleCart()" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 bg-slate-50">
+                
+                <div id="cartItemsList" class="space-y-3 mb-6">
+                    <!-- JS Injected -->
+                </div>
+
+                <div id="checkoutFormArea" class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                    
+                    <h4 class="font-bold text-slate-800 border-b pb-2 text-sm flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i> Informasi Pengiriman</h4>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
+                        <input type="text" id="buyerName" class="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 bg-slate-50 focus:bg-white transition-colors" placeholder="Budi Santoso">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">No WhatsApp <span class="text-red-500">*</span></label>
+                        <input type="tel" id="buyerWa" class="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 bg-slate-50 focus:bg-white transition-colors" placeholder="08123456789">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Alamat Pengiriman / Catatan <span class="text-red-500">*</span></label>
+                        <textarea id="buyerNotes" rows="2" class="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 bg-slate-50 focus:bg-white transition-colors" placeholder="Jl. Sudirman No 123..."></textarea>
+                    </div>
+
+                    <h4 class="font-bold text-slate-800 border-b pb-2 text-sm mt-6 flex items-center gap-2"><i data-lucide="receipt" class="w-4 h-4 text-slate-400"></i> Rincian & Diskon</h4>
+                    
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+                        <div class="flex justify-between items-center text-sm font-bold text-slate-600">
+                            <span>Subtotal Belanja:</span><span id="coSubtotal">Rp 0</span>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Pilih Area Pengiriman</label>
+                            <select id="coOngkir" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:border-emerald-500" onchange="recalculateCart()">
+                                <option value="">-- Tanpa Ongkir / Ambil Sendiri --</option>
+                                <!-- Diisi JS -->
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Kode Kupon Diskon</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="coKuponCode" class="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm uppercase focus:outline-none focus:border-emerald-500" placeholder="KODE...">
+                                <button type="button" onclick="applyCartCoupon()" id="btnApplyCup" class="bg-slate-800 text-white px-4 rounded-lg text-xs font-bold shrink-0 hover:bg-slate-700 transition-colors">Terapkan</button>
+                            </div>
+                            <p id="coKuponMsg" class="text-[10px] mt-1.5 font-bold hidden"></p>
+                        </div>
+                        
+                        <div class="border-t border-slate-200 pt-3 space-y-1.5">
+                            <div class="flex justify-between text-xs sm:text-sm font-medium text-slate-500"><span>Biaya Ongkir:</span><span id="coOngkirVal">Rp 0</span></div>
+                            <div class="flex justify-between text-xs sm:text-sm font-medium text-emerald-600"><span>Potongan Diskon:</span><span id="coDiskonVal">-Rp 0</span></div>
+                            <div class="flex justify-between text-xs sm:text-sm font-medium text-amber-600 hidden" id="coPpnRow"><span>PPN:</span><span id="coPpnVal">Rp 0</span></div>
+                            <div class="flex justify-between text-xs sm:text-sm font-medium text-blue-600 hidden" id="coBiayaLayananRow"><span>Biaya Layanan:</span><span id="coBiayaLayananVal">Rp 0</span></div>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-slate-800 border-b pb-2 text-sm mt-6 flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4 text-slate-400"></i> Metode Pembayaran</h4>
+                    
+                    <div>
+                        <select id="paymentMethod" class="w-full px-3 py-3 border border-slate-200 rounded-lg text-sm font-bold bg-slate-50 focus:outline-none focus:border-emerald-500 cursor-pointer" onchange="checkPaymentMethod()">
+                            <option value="Transfer Bank">Transfer Bank</option>
+                            <option value="QRIS">QRIS</option>
+                            <option value="COD / Bayar di Tempat">COD / Bayar di Tempat</option>
+                        </select>
+                    </div>
+
+                    <div id="bankInfoArea" class="hidden bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-start gap-3">
+                        <i data-lucide="building" class="w-5 h-5 text-blue-600 shrink-0 mt-0.5"></i>
+                        <div>
+                            <p class="text-[10px] text-blue-600 font-bold uppercase tracking-wider mb-0.5">Transfer Ke Rekening:</p>
+                            <p class="text-sm font-bold text-slate-800" id="bankInfoText">-</p>
+                        </div>
+                    </div>
+
+                    <div id="qrisInfoArea" class="hidden bg-emerald-50 border border-emerald-100 p-4 rounded-xl text-center">
+                        <p class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mb-3 flex items-center justify-center gap-1"><i data-lucide="scan" class="w-3 h-3"></i> Scan QRIS Untuk Bayar</p>
+                        <div class="bg-white p-2 rounded-xl shadow-sm inline-block border border-emerald-100">
+                            <img id="qrisImg" src="" class="w-40 h-40 object-contain">
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+
+            <div class="p-4 bg-white border-t border-slate-100 shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] rounded-b-3xl">
+                <div class="flex justify-between items-end mb-3">
+                    <span class="text-sm font-bold text-slate-500">Grand Total</span>
+                    <span class="text-3xl font-black text-emerald-600" id="modalTotalPay">Rp 0</span>
+                </div>
+                
+                <button onclick="submitOrderWA()" id="btnSubmitOrder" class="w-full py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl flex justify-center items-center gap-2 shadow-lg transition-all">
+                    <i data-lucide="send" class="w-5 h-5"></i> Kirim Pesanan
+                </button>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL HALAMAN LEGAL (ToS / Privacy) -->
+    <!-- ========================================== -->
+    <div id="legalModal" class="fixed inset-0 z-[150] hidden">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeLegalModal()"></div>
+        <div class="absolute bottom-0 left-0 right-0 max-w-3xl mx-auto h-[85vh] bg-white rounded-t-3xl shadow-2xl flex flex-col transform transition-transform duration-300 translate-y-full" id="legalContent">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-white rounded-t-3xl shrink-0">
+                <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2" id="legalTitle"><i data-lucide="scale" class="w-5 h-5 text-emerald-500"></i> Legal</h3>
+                <button onclick="closeLegalModal()" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 bg-slate-50 hide-scrollbar">
+                <div id="legalText" class="prose prose-sm max-w-none text-slate-600 whitespace-pre-wrap leading-relaxed">
+                    <!-- Text Injected via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL SECRET PIN (EASTER EGG LOGIN) -->
+    <!-- ========================================== -->
+    <div id="pinModal" class="fixed inset-0 z-[200] hidden">
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" onclick="closePinModal()"></div>
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-xs text-center z-10 transform transition-all scale-95 opacity-0" id="pinContent">
+                <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-600 shadow-inner">
+                    <i data-lucide="lock" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800 mb-1">Akses Admin</h3>
+                <p class="text-xs text-slate-500 mb-6">Masukkan PIN rahasia Anda</p>
+                <input type="text" style="display:none" aria-hidden="true">
+                <input type="password" style="display:none" aria-hidden="true">
+                <input type="password" id="secretPinInput" autocomplete="new-password" class="w-full text-center tracking-widest text-3xl px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 mb-4 shadow-inner" placeholder="••••" maxlength="6">
+                <p id="pinError" class="text-xs text-red-500 font-bold hidden mb-4 bg-red-50 py-1 rounded">PIN Salah!</p>
+                <button onclick="verifyPin()" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition-colors shadow-lg">Masuk</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- JAVASCRIPT LOGIC -->
+    <!-- ========================================== -->
+    <script>
+        // Fungsi aman untuk inisialisasi Ikon Lucide
+        function refreshIcons() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
             }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshIcons();
+            fetchStoreCatalog();
+        });
+        
+        const formatRupiah = (angka) => {
+            return new Intl.NumberFormat('id-ID', { 
+                style: 'currency', 
+                currency: 'IDR', 
+                minimumFractionDigits: 0 
+            }).format(angka);
+        };
+        
+        // SCRIPT URL (PASTIKAN SUDAH DIGANTI DENGAN DEPLOY APP SCRIPT ANDA)
+        var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyB2ey_dLtNrEUp6ceYJXiCU0j-HJMZf0xVFwNR8j7kQQi9-Z-GN8UaeLvFcJnaz7q6Ag/exec';
+
+        let storeData = {};
+        let appSettings = {};
+        let products = [];
+        let globalCategories = [];
+        let globalShipping = [];
+        let globalArticles = [];
+        let activeCategory = ''; 
+        let cart = [];
+        let footerBrandingText = ''; // TANGKAP DATA FOOTER DINAMIS
+        
+        let activeProductDetails = null;
+        let selectedVariantId = null;
+        let parsedVariants = [];
+
+        let posSubtotal = 0;
+        let posOngkirCost = 0;
+        let posDiskonVal = 0;
+        let posPpnVal = 0;
+        let posServiceVal = 0;
+        let posGrandTotal = 0;
+
+        let secretTapCount = 0;
+        let secretTapTimer;
+
+        // Fetch Data Toko & Katalog (VERSI SINGLE STORE)
+        async function fetchStoreCatalog() {
+            try {
+                let fd = new FormData();
+                // Nggak perlu lagi kirim parameter slug, langsung minta katalog!
+                fd.append('action', 'get_store_catalog');
+
+                const response = await fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    body: fd 
+                });
+                const res = await response.json();
+
+                if (res.success) {
+                    storeData = res.store;
+                    products = res.products;
+                    globalCategories = res.categories || [];
+                    globalShipping = res.shipping_rates || [];
+                    globalArticles = res.articles || [];
+                    appSettings = res.app_settings || {}; // Tangkap data App Settings
+                    footerBrandingText = res.footer_branding || ''; // TANGKAP FOOTER DINAMIS DARI BACKEND
+                    buildStoreUI();
+                } else {
+                    showLoaderError("Gagal memuat data katalog. Pastikan setting Google Sheet benar.");
+                }
+            } catch(e) {
+                showLoaderError("Gagal terhubung ke server database.");
+            }
+        }
+
+        // Render UI Toko Awal
+        function buildStoreUI() {
+            document.getElementById('loaderScreen').classList.add('hidden');
+
+            document.title = storeData.nama_toko + " - Belanja Online";
+            document.getElementById('storeName').innerText = storeData.nama_toko;
+            
+            if (storeData.logo) {
+                document.getElementById('storeLogo').innerHTML = `<img src="${storeData.logo}" class="w-full h-full object-cover">`;
+                const favicon = document.getElementById('dynamicFavicon');
+                if(favicon) favicon.href = storeData.logo;
+            } else {
+                document.getElementById('storeLogo').innerHTML = `<span class="font-bold text-lg">${storeData.nama_toko.charAt(0)}</span>`;
+            }
+
+            // Tema & Banner
+            if (storeData.theme_color) {
+                document.documentElement.style.setProperty('--theme-bg', storeData.theme_color);
+            }
+            if (storeData.banner_url) {
+                document.getElementById('storeBannerImg').src = storeData.banner_url;
+                document.getElementById('storeBanner').classList.remove('hidden');
+            }
+
+            // BANNER TENGAH (PROMO) DINAMIS
+            if (appSettings.show_banner_mid === 'on' && appSettings.banner_mid_image && appSettings.banner_mid_image.trim() !== '') {
+                const midBannerContainer = document.getElementById('midBannerContainer');
+                const midBannerImg = document.getElementById('midBannerImg');
+                if (midBannerContainer && midBannerImg) {
+                    midBannerImg.src = appSettings.banner_mid_image;
+                    midBannerContainer.classList.remove('hidden');
+                }
+            }
+
+            // FITUR TEKS BERJALAN (ANNOUNCEMENT BAR)
+            if (storeData.announcement_text && storeData.announcement_text.trim() !== '') {
+                const annBar = document.getElementById('announcementBar');
+                const annContent = document.getElementById('announcementContent');
+                if (annBar && annContent) {
+                    let textHtml = storeData.announcement_text;
+                    if (storeData.announcement_link && storeData.announcement_link.trim() !== '') {
+                        textHtml = `<a href="${storeData.announcement_link}" target="_blank" class="underline hover:text-amber-200 transition-colors">${textHtml}</a>`;
+                    }
+                    annContent.innerHTML = textHtml;
+                    annBar.classList.remove('hidden');
+                }
+            }
+
+            // Render Social Media (FIXED BRAND ICONS)
+            const smContainer = document.getElementById('footerSocialMedia');
+            if (storeData.social_media && storeData.social_media !== '[]') {
+                try {
+                    const smList = JSON.parse(storeData.social_media);
+                    smContainer.innerHTML = smList.map(sm => {
+                        let svgContent = `<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>`;
+                        let colorClass = 'text-slate-400 hover:text-emerald-500';
+                        
+                        switch(sm.platform.toLowerCase()) {
+                            case 'instagram': 
+                                svgContent = `<rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>`;
+                                colorClass = 'text-slate-400 hover:text-pink-500'; break;
+                            case 'facebook': 
+                                svgContent = `<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>`;
+                                colorClass = 'text-slate-400 hover:text-blue-600'; break;
+                            case 'twitter': 
+                                svgContent = `<path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>`;
+                                colorClass = 'text-slate-400 hover:text-sky-500'; break;
+                            case 'tiktok': 
+                                svgContent = `<path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle>`;
+                                colorClass = 'text-slate-400 hover:text-slate-900'; break;
+                            case 'shopee': 
+                            case 'tokopedia': 
+                                svgContent = `<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path>`;
+                                colorClass = sm.platform.toLowerCase() === 'shopee' ? 'text-slate-400 hover:text-orange-500' : 'text-slate-400 hover:text-green-500'; 
+                                break;
+                        }
+                        
+                        return `<a href="${sm.url}" target="_blank" class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center transition-colors shadow-sm hover:shadow-md ${colorClass}"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${svgContent}</svg></a>`;
+                    }).join('');
+                } catch(e) {}
+            }
+
+            // Render Legal Settings & About Us
+            const legalLinks = document.getElementById('legalLinks');
+            let legalHtml = "";
+            let legalParsed = {};
+            try { 
+                if(storeData.legal_settings) legalParsed = JSON.parse(storeData.legal_settings); 
+            } catch(e) {}
+            
+            // THE HOLY TRINITY: TENTANG KAMI
+            if(appSettings.about_us_text && appSettings.about_us_text.trim() !== '') {
+                let encodedAbout = encodeURIComponent(appSettings.about_us_text);
+                legalHtml += `<button onclick="openAboutModal(\`${encodedAbout}\`)" class="hover:text-emerald-500 transition-colors">Tentang Kami</button>`;
+            }
+
+            if(legalParsed.tos_active === 'on') {
+                if(legalHtml !== "") legalHtml += `<span class="text-slate-300">•</span>`;
+                let encodedTos = encodeURIComponent(legalParsed.tos_content || '');
+                legalHtml += `<button onclick="openLegalModal('Syarat & Ketentuan', \`${encodedTos}\`)" class="hover:text-emerald-500 transition-colors">Syarat & Ketentuan</button>`;
+            }
+            if(legalParsed.privacy_active === 'on') {
+                if(legalHtml !== "") legalHtml += `<span class="text-slate-300">•</span>`;
+                let encodedPrivacy = encodeURIComponent(legalParsed.privacy_content || '');
+                legalHtml += `<button onclick="openLegalModal('Kebijakan Privasi', \`${encodedPrivacy}\`)" class="hover:text-emerald-500 transition-colors">Kebijakan Privasi</button>`;
+            }
+            if(legalLinks) legalLinks.innerHTML = legalHtml;
+
+            // Info Pembayaran
+            const sel = document.getElementById('paymentMethod');
+            if (storeData.bank_info) {
+                document.getElementById('bankInfoText').innerText = storeData.bank_info;
+            } else {
+                for(let i = 0; i < sel.options.length; i++) {
+                    if(sel.options[i].value === 'Transfer Bank') sel.remove(i);
+                }
+            }
+            if (storeData.qris_url) {
+                document.getElementById('qrisImg').src = storeData.qris_url;
+            } else {
+                for(let i = 0; i < sel.options.length; i++) {
+                    if(sel.options[i].value === 'QRIS') sel.remove(i);
+                }
+            }
+            checkPaymentMethod(); 
+
+            // Render Ongkir
+            const selOngkir = document.getElementById('coOngkir');
+            if (selOngkir) {
+                let opts = '<option value="">-- Tanpa Ongkir / Ambil Sendiri --</option>';
+                globalShipping.forEach(c => { 
+                    opts += `<option value="${c.id}">${c.area} (+ ${formatRupiah(c.rate)})</option>`; 
+                });
+                selOngkir.innerHTML = opts;
+            }
+
+            renderCategoryFilter();
+            renderProductGrid(products);
+
+            // THE HOLY TRINITY: RENDER BLOG SECTION
+            if (appSettings.show_blog_section === 'on' && globalArticles.length > 0) {
+                document.getElementById('blogSection').classList.remove('hidden');
+                renderBlogGrid(globalArticles);
+            }
+
+            // --- RENDER FOOTER DINAMIS ---
+            if (footerBrandingText) {
+                document.getElementById('poweredByText').innerHTML = footerBrandingText;
+            }
+
+            refreshIcons();
+
+            // Secret Tap
+            if (storeData.secret_login_status === 'on') {
+                document.getElementById('poweredByText').addEventListener('click', handleSecretTap);
+            }
+
+            injectPixels();
+
+            // THE HOLY TRINITY: POP-UP PROMO WELCOME
+            if (appSettings.show_popup === 'on' && !sessionStorage.getItem('promoPopupShown')) {
+                setTimeout(() => {
+                    showPromoPopup(appSettings);
+                }, 1500); // Tunda sebentar biar elegan
+            }
+        }
+
+        // ==========================================
+        // THE HOLY TRINITY: LOGIC POP-UP & BLOG
+        // ==========================================
+        function showPromoPopup(settings) {
+            document.getElementById('popupImg').src = settings.popup_image || 'https://placehold.co/500x500/ec4899/ffffff?text=Promo';
+            document.getElementById('popupDesc').innerText = settings.popup_desc || '';
+            
+            const btn = document.getElementById('popupBtn');
+            btn.innerText = settings.popup_btn_text || 'Lihat Promo';
+            btn.href = settings.popup_btn_link || '#';
+            
+            const modal = document.getElementById('promoPopupModal');
+            const content = document.getElementById('promoPopupContent');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => { 
+                content.classList.remove('scale-95', 'opacity-0'); 
+                content.classList.add('scale-100', 'opacity-100'); 
+            }, 10);
+            
+            // Tandai bahwa pop-up sudah pernah muncul di sesi ini
+            sessionStorage.setItem('promoPopupShown', 'true');
+        }
+
+        function closePromoPopup() {
+            const modal = document.getElementById('promoPopupModal');
+            const content = document.getElementById('promoPopupContent');
+            content.classList.remove('scale-100', 'opacity-100'); 
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        function openAboutModal(encodedText) {
+            document.getElementById('aboutText').innerHTML = decodeURIComponent(encodedText);
+            const modal = document.getElementById('aboutModal');
+            const content = document.getElementById('aboutContent');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => { 
+                content.classList.replace('translate-y-full', 'translate-y-0'); 
+            }, 10);
+            refreshIcons();
+        }
+
+        function closeAboutModal() {
+            const modal = document.getElementById('aboutModal');
+            const content = document.getElementById('aboutContent');
+            content.classList.replace('translate-y-0', 'translate-y-full');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        function renderBlogGrid(articles) {
+            const grid = document.getElementById('blogGrid');
+            grid.innerHTML = articles.map(a => `
+                <a href="artikel.html?slug=${a.slug}" class="flex items-center gap-4 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group">
+                    <img src="${a.img || 'https://placehold.co/100x100/e2e8f0/64748b?text=News'}" class="w-20 h-20 rounded-xl object-cover shrink-0">
+                    <div class="flex-1 min-w-0 py-1">
+                        <h4 class="font-bold text-slate-800 text-sm line-clamp-2 group-hover:text-indigo-600 transition-colors leading-snug">${a.title}</h4>
+                        <p class="text-[10px] text-slate-400 mt-2 flex items-center gap-1 font-medium"><i data-lucide="calendar" class="w-3 h-3"></i> ${new Date(a.date).toLocaleDateString('id-ID')}</p>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        // Tracking Pixels
+        function injectPixels() {
+            if (storeData.pixel_fb) {
+                !function(f,b,e,v,n,t,s)
+                {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+                n.queue=[];t=b.createElement(e);t.async=!0;
+                t.src=v;s=b.getElementsByTagName(e)[0];
+                s.parentNode.insertBefore(t,s)}(window, document,'script',
+                'https://connect.facebook.net/en_US/fbevents.js');
+                fbq('init', storeData.pixel_fb);
+                fbq('track', 'PageView');
+            }
+            if (storeData.pixel_tiktok) {
+                !function (w, d, t) {
+                  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib=tq";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
+                  ttq.load(storeData.pixel_tiktok);
+                  ttq.page();
+                }(window, document, 'ttq');
+            }
+            if (storeData.pixel_google) {
+                const script = document.createElement('script');
+                script.async = true;
+                script.src = `https://www.googletagmanager.com/gtag/js?id=${storeData.pixel_google}`;
+                document.head.appendChild(script);
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', storeData.pixel_google);
+            }
+        }
+
+        function trackAddToCart(productName, price) {
+            try {
+                if (typeof fbq !== 'undefined') fbq('track', 'AddToCart', { content_name: productName, value: price, currency: 'IDR' });
+                if (typeof ttq !== 'undefined') ttq.track('AddToCart', { contents: [{ content_name: productName, price: price, currency: 'IDR' }] });
+                if (typeof gtag !== 'undefined') gtag('event', 'add_to_cart', { currency: 'IDR', value: price, items: [{ item_name: productName }] });
+            } catch(e) {}
+        }
+
+        function trackPurchase(total, orderId) {
+            try {
+                if (typeof fbq !== 'undefined') fbq('track', 'Purchase', { value: total, currency: 'IDR' });
+                if (typeof ttq !== 'undefined') ttq.track('CompletePayment', { value: total, currency: 'IDR' });
+                if (typeof gtag !== 'undefined') gtag('event', 'purchase', { transaction_id: orderId, value: total, currency: 'IDR' });
+            } catch(e) {}
+        }
+
+        // ==========================================
+        // FILTER KATEGORI
+        // ==========================================
+        function renderCategoryFilter() {
+            const container = document.getElementById('categoryFilterContainer');
+            if (globalCategories.length === 0) {
+                container.classList.add('hidden'); // Sembunyikan kalau gak ada kategori aktif
+                return;
+            } else {
+                container.classList.remove('hidden');
+            }
+            
+            let html = `<button onclick="setCategory('')" id="cat-all" class="cat-btn snap-start px-4 py-2 bg-emerald-500 text-white rounded-full text-xs font-bold whitespace-nowrap shadow-sm transition-colors border border-emerald-500">Semua Produk</button>`;
+            
+            // Sort berdasarkan sort_order
+            const sortedCats = [...globalCategories].sort((a,b) => a.sort - b.sort);
+            sortedCats.forEach(c => {
+                let prefix = c.parent_id ? '↳ ' : '';
+                html += `<button onclick="setCategory('${c.id}')" id="cat-${c.id}" class="cat-btn snap-start px-4 py-2 bg-white text-slate-600 rounded-full text-xs font-bold whitespace-nowrap shadow-sm transition-colors border border-slate-200 hover:border-emerald-300 hover:text-emerald-600">${prefix}${c.name}</button>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function setCategory(catId) {
+            activeCategory = catId;
+            
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('bg-emerald-500', 'text-white', 'border-emerald-500');
+                btn.classList.add('bg-white', 'text-slate-600', 'border-slate-200');
+            });
+            
+            const activeBtn = catId === '' ? document.getElementById('cat-all') : document.getElementById('cat-' + catId);
+            if(activeBtn) {
+                activeBtn.classList.remove('bg-white', 'text-slate-600', 'border-slate-200');
+                activeBtn.classList.add('bg-emerald-500', 'text-white', 'border-emerald-500');
+            }
+            
+            filterProducts();
+        }
+
+        function filterProducts() {
+            const q = document.getElementById('searchProd').value.toLowerCase();
+            const filteredList = products.filter(p => {
+                const matchSearch = p.name.toLowerCase().includes(q) || (p.desc && p.desc.toLowerCase().includes(q));
+                const matchCat = activeCategory === '' ? true : p.category_id === activeCategory;
+                return matchSearch && matchCat;
+            });
+            renderProductGrid(filteredList);
+        }
+
+        function createProductCardHTML(p, isPromoCard = false) {
+            const imgUrl = p.img || `https://placehold.co/300x300/e2e8f0/64748b?text=${p.name.charAt(0)}`;
+            
+            let badgeHtml = '';
+            if (p.badge) {
+                badgeHtml = `<div class="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-md shadow-md z-10 animate-pulse uppercase tracking-wider">${p.badge}</div>`;
+            }
+            
+            let hasVariant = false; 
+            try { 
+                let vars = JSON.parse(p.variants || '[]'); 
+                if(vars.length > 0) {
+                    hasVariant = true; 
+                }
+            } catch(e) {
+                console.error("Error parse variant saat render", e);
+            }
+            
+            let variantBadgeHtml = '';
+            if (hasVariant) {
+                variantBadgeHtml = `<div class="absolute bottom-2 left-2 bg-slate-900/70 backdrop-blur text-white text-[9px] font-bold px-2 py-0.5 rounded flex items-center gap-1 shadow-sm"><i data-lucide="layers" class="w-3 h-3"></i> Varian</div>`;
+            }
+
+            // PERBAIKAN CLASS: Hapus lebar fix dan jadikan grid-friendly
+            const cardClass = isPromoCard 
+                ? "bg-white rounded-2xl border-2 border-orange-200 shadow-md overflow-hidden flex flex-col group relative cursor-pointer hover:shadow-lg transition-all duration-300 ring-2 ring-orange-50"
+                : "bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col group relative cursor-pointer hover:shadow-lg transition-all duration-300";
+
+            return `
+            <div class="${cardClass}" onclick="openProductDetail('${p.id}')">
+                <div class="aspect-square bg-slate-100 overflow-hidden relative">
+                    ${badgeHtml}
+                    ${variantBadgeHtml}
+                    <img src="${imgUrl}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                </div>
+                <div class="p-3.5 flex-1 flex flex-col">
+                    <h4 class="font-bold text-slate-800 text-sm line-clamp-2 leading-tight mb-1 group-hover:text-emerald-600 transition-colors">${p.name}</h4>
+                    <p class="text-[10px] text-slate-400 line-clamp-2 mb-3 flex-1 leading-snug">${p.desc || ''}</p>
+                    
+                    <div class="mt-auto flex items-end justify-between border-t border-slate-50 pt-3">
+                        <div>
+                            <p class="text-emerald-600 font-black text-base leading-none">${formatRupiah(p.price)}</p>
+                            <p class="text-[9px] text-slate-400 mt-1 font-medium">/${p.unit || 'pcs'}</span>
+                        </div>
+                        <button onclick="event.stopPropagation(); openProductDetail('${p.id}')" class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center hover:bg-emerald-500 transition-colors shadow-md transform active:scale-95 shrink-0">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        // ==========================================
+        // RENDER GRID PRODUK
+        // ==========================================
+        function renderProductGrid(list) {
+            const grid = document.getElementById('productGrid');
+            const promoSection = document.getElementById('promoSection');
+            const promoGrid = document.getElementById('promoGrid');
+            const regTitle = document.getElementById('regularTitleSection');
+            
+            if (list.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-10 bg-white rounded-xl shadow-sm border border-slate-100">
+                        <i data-lucide="package-x" class="w-12 h-12 mx-auto text-slate-300 mb-3"></i>
+                        <p class="text-sm font-medium text-slate-500">Produk tidak ditemukan.</p>
+                    </div>
+                `;
+                if(promoSection) promoSection.classList.add('hidden');
+                if(regTitle) regTitle.classList.add('hidden');
+                refreshIcons(); 
+                return;
+            }
+
+            const promoItems = [];
+            const regularItems = [];
+
+            list.forEach(p => {
+                let isPromo = false;
+                if(p.badge) {
+                    const b = p.badge.toLowerCase();
+                    if(b.includes('promo') || b.includes('diskon') || b.includes('sale') || b.includes('%') || b.includes('terlaris') || b.includes('hot')) {
+                        isPromo = true;
+                    }
+                }
+                if(isPromo) promoItems.push(p);
+                else regularItems.push(p);
+            });
+
+            if(promoItems.length > 0 && promoSection && promoGrid) {
+                promoSection.classList.remove('hidden');
+                promoGrid.innerHTML = promoItems.map(p => createProductCardHTML(p, true)).join('');
+            } else if(promoSection) {
+                promoSection.classList.add('hidden');
+            }
+
+            if(regularItems.length > 0) {
+                if(regTitle) regTitle.classList.remove('hidden');
+                grid.innerHTML = regularItems.map(p => createProductCardHTML(p, false)).join('');
+            } else {
+                if(regTitle) regTitle.classList.add('hidden');
+                grid.innerHTML = '';
+            }
+            
+            refreshIcons();
+        }
+
+        // ==========================================
+        // MODAL DETAIL PRODUK
+        // ==========================================
+        function openProductDetail(id) {
+            const p = products.find(x => x.id === id);
+            if (!p) return;
+            
+            activeProductDetails = p; 
+            selectedVariantId = null;
+
+            document.getElementById('detailImg').src = p.img || `https://placehold.co/300x300/e2e8f0/64748b?text=${p.name.charAt(0)}`;
+            document.getElementById('detailName').innerText = p.name;
+            document.getElementById('detailPriceUnit').innerHTML = `${formatRupiah(p.price)} <span class="text-sm text-slate-400 font-medium">/${p.unit || 'pcs'}</span>`;
+            document.getElementById('detailDesc').innerText = p.desc || 'Tidak ada deskripsi detail untuk produk ini.';
+            
+            const badgeContainer = document.getElementById('detailBadgeContainer');
+            if (p.badge) { 
+                document.getElementById('detailBadgeText').innerText = p.badge; 
+                badgeContainer.classList.remove('hidden'); 
+            } else {
+                badgeContainer.classList.add('hidden');
+            }
+
+            const varArea = document.getElementById('variantSelectionArea');
+            const varContainer = document.getElementById('variantOptionsContainer');
+            const varError = document.getElementById('variantErrorMsg');
+            
+            varError.classList.add('hidden'); 
+            parsedVariants = [];
+            
+            try { 
+                if (p.variants && p.variants !== '') {
+                    parsedVariants = JSON.parse(p.variants); 
+                }
+            } catch(e) {}
+
+            if (parsedVariants.length > 0) {
+                varArea.classList.remove('hidden');
+                varContainer.innerHTML = parsedVariants.map(v => {
+                    let labelArr = [];
+                    if(v.warna) labelArr.push(v.warna);
+                    if(v.size) labelArr.push(v.size);
+                    let labelText = labelArr.join(' - ');
+                    
+                    let isOutOfStock = false;
+                    if(v.stok !== '' && !isNaN(parseInt(v.stok)) && parseInt(v.stok) <= 0) {
+                        isOutOfStock = true;
+                    }
+                    
+                    if(isOutOfStock) {
+                        return `<button type="button" disabled class="px-4 py-2 border border-slate-200 bg-slate-100 text-slate-400 rounded-lg text-sm font-medium cursor-not-allowed line-through opacity-70">${labelText} (Habis)</button>`;
+                    }
+                    return `<button type="button" id="btn-var-${v.id}" onclick="selectVariant('${v.id}')" class="variant-btn px-4 py-2 border border-slate-200 bg-white text-slate-700 rounded-lg text-sm font-medium hover:border-emerald-500 hover:text-emerald-600 transition-colors">${labelText}</button>`;
+                }).join('');
+            } else {
+                varArea.classList.add('hidden'); 
+                varContainer.innerHTML = '';
+            }
+
+            document.getElementById('detailAddBtn').onclick = function() {
+                if (parsedVariants.length > 0 && !selectedVariantId) {
+                    varError.classList.remove('hidden');
+                    return;
+                }
+                addCartWithVariant();
+            };
+
+            const modal = document.getElementById('productDetailModal');
+            const content = document.getElementById('productDetailContent');
+            
+            modal.classList.remove('hidden'); 
+            setTimeout(() => { 
+                content.classList.remove('scale-95', 'opacity-0'); 
+                content.classList.add('scale-100', 'opacity-100'); 
+            }, 10);
+        }
+
+        function selectVariant(varId) {
+            selectedVariantId = varId; 
+            document.getElementById('variantErrorMsg').classList.add('hidden');
+            
+            document.querySelectorAll('.variant-btn').forEach(btn => { 
+                btn.classList.remove('bg-emerald-50', 'border-emerald-500', 'text-emerald-600', 'ring-2', 'ring-emerald-200'); 
+                btn.classList.add('bg-white', 'border-slate-200', 'text-slate-700'); 
+            });
+            
+            const activeBtn = document.getElementById('btn-var-' + varId);
+            if(activeBtn) { 
+                activeBtn.classList.remove('bg-white', 'border-slate-200', 'text-slate-700'); 
+                activeBtn.classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-600', 'ring-2', 'ring-emerald-200'); 
+            }
+
+            const varianData = parsedVariants.find(v => v.id === varId);
+            if(varianData) {
+                let displayPrice = activeProductDetails.price;
+                if(varianData.harga && varianData.harga !== '') displayPrice = varianData.harga;
+                
+                document.getElementById('detailPriceUnit').innerHTML = `${formatRupiah(displayPrice)} <span class="text-sm text-slate-400 font-medium">/${activeProductDetails.unit || 'pcs'}</span>`;
+                
+                let displayImg = activeProductDetails.img || `https://placehold.co/300x300/e2e8f0/64748b?text=${activeProductDetails.name.charAt(0)}`;
+                if(varianData.gambar && varianData.gambar !== '') displayImg = varianData.gambar;
+                document.getElementById('detailImg').src = displayImg;
+            }
+        }
+
+        function closeProductDetail() {
+            const modal = document.getElementById('productDetailModal');
+            const content = document.getElementById('productDetailContent');
+            
+            content.classList.remove('scale-100', 'opacity-100'); 
+            content.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // ==========================================
+        // CART LOGIC
+        // ==========================================
+        function addCartWithVariant() {
+            let prodToAdd = { ...activeProductDetails };
+            
+            if (selectedVariantId && parsedVariants.length > 0) {
+                const varData = parsedVariants.find(v => v.id === selectedVariantId);
+                if (varData) {
+                    let labelArr = [];
+                    if(varData.warna) labelArr.push(varData.warna);
+                    if(varData.size) labelArr.push(varData.size);
+                    
+                    prodToAdd.name = `${prodToAdd.name} - ${labelArr.join(' ')}`;
+                    if (varData.harga && varData.harga !== '') prodToAdd.price = parseInt(varData.harga);
+                    if (varData.gambar && varData.gambar !== '') prodToAdd.img = varData.gambar;
+                    
+                    prodToAdd.stock = varData.stok; 
+                    prodToAdd.variant_id = selectedVariantId;
+                    prodToAdd.cart_id = `${prodToAdd.id}-${selectedVariantId}`; 
+                }
+            } else {
+                prodToAdd.cart_id = prodToAdd.id;
+            }
+            
+            const existing = cart.find(c => c.cart_id === prodToAdd.cart_id);
+            
+            if (existing) {
+                if (existing.stock !== '' && !isNaN(parseInt(existing.stock))) {
+                    if (existing.qty >= parseInt(existing.stock)) return alert("Maksimal stok tercapai!");
+                }
+                existing.qty++;
+            } else {
+                cart.push({ ...prodToAdd, qty: 1 });
+            }
+            
+            trackAddToCart(prodToAdd.name, prodToAdd.price);
+            updateCartUI(); 
+            closeProductDetail();
+            
+            const badge = document.getElementById('cartBadge'); 
+            badge.classList.add('animate-bounce'); 
+            setTimeout(() => badge.classList.remove('animate-bounce'), 1000);
+        }
+
+        function updateCartQty(cartId, delta) {
+            const idx = cart.findIndex(c => c.cart_id === cartId); 
+            if (idx === -1) return;
+            
+            cart[idx].qty += delta;
+            
+            if (cart[idx].qty <= 0) {
+                cart.splice(idx, 1);
+            } else {
+                if (cart[idx].stock !== '' && !isNaN(parseInt(cart[idx].stock))) {
+                    if (cart[idx].qty > parseInt(cart[idx].stock)) { 
+                        cart[idx].qty = parseInt(cart[idx].stock); 
+                        alert("Maksimal stok tercapai!"); 
+                    }
+                }
+            }
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            let totalItem = 0; posSubtotal = 0;
+            
+            cart.forEach(c => { 
+                totalItem += c.qty; posSubtotal += (c.price * c.qty); 
+            });
+
+            const badge = document.getElementById('cartBadge'); 
+            badge.innerText = totalItem;
+            
+            if (totalItem > 0) badge.classList.replace('scale-0', 'scale-100');
+            else badge.classList.replace('scale-100', 'scale-0');
+
+            const bBar = document.getElementById('bottomCartBar');
+            document.getElementById('bottomCartTotal').innerText = formatRupiah(posSubtotal);
+            document.getElementById('bottomCartItems').innerText = totalItem;
+            
+            if (totalItem > 0) bBar.classList.replace('translate-y-full', 'translate-y-0');
+            else bBar.classList.replace('translate-y-0', 'translate-y-full');
+
+            const clist = document.getElementById('cartItemsList');
+            
+            if (cart.length === 0) {
+                clist.innerHTML = `<div class="text-center text-slate-400 text-sm mt-5 mb-10"><i data-lucide="shopping-cart" class="w-12 h-12 mx-auto mb-2 text-slate-200"></i>Keranjang Anda kosong.</div>`;
+                refreshIcons();
+            } else {
+                clist.innerHTML = cart.map(c => `
+                    <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow">
+                        <img src="${c.img || 'https://placehold.co/100'}" class="w-14 h-14 rounded-lg object-cover bg-slate-100">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-slate-800 text-sm truncate" title="${c.name}">${c.name}</h4>
+                            <p class="text-emerald-600 font-bold text-xs mt-0.5">${formatRupiah(c.price)}</p>
+                        </div>
+                        <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1 shrink-0 shadow-inner">
+                            <button onclick="updateCartQty('${c.cart_id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded text-slate-600 shadow-sm hover:text-emerald-600"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                            <span class="text-xs font-bold w-4 text-center">${c.qty}</span>
+                            <button onclick="updateCartQty('${c.cart_id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded text-slate-600 shadow-sm hover:text-emerald-600"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+                refreshIcons();
+            }
+            recalculateCart();
+        }
+
+        // ==========================================
+        // 3. AUTO-FILL CHECKOUT LOGIC & KUPON
+        // ==========================================
+        const cartModal = document.getElementById('cartModal');
+        const cartContent = document.getElementById('cartContent');
+
+        function toggleCart() {
+            if (cartModal.classList.contains('hidden')) {
+                updateCartUI(); 
+
+                // MENGAMBIL DATA PEMBELI DARI LOCAL STORAGE (AUTO-FILL)
+                try {
+                    const savedBuyer = JSON.parse(localStorage.getItem('jualanplus_buyer_info'));
+                    if(savedBuyer) {
+                        const bName = document.getElementById('buyerName');
+                        const bWa = document.getElementById('buyerWa');
+                        const bNotes = document.getElementById('buyerNotes');
+                        
+                        if(bName && !bName.value) bName.value = savedBuyer.name || '';
+                        if(bWa && !bWa.value) bWa.value = savedBuyer.wa || '';
+                        if(bNotes && !bNotes.value) bNotes.value = savedBuyer.notes || '';
+                    }
+                } catch(e) {}
+
+                cartModal.classList.remove('hidden');
+                setTimeout(() => {
+                    cartContent.classList.replace('translate-y-full', 'translate-y-0');
+                }, 10);
+            } else {
+                cartContent.classList.replace('translate-y-0', 'translate-y-full');
+                setTimeout(() => {
+                    cartModal.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        function checkPaymentMethod() {
+            const method = document.getElementById('paymentMethod').value;
+            const bankInfoArea = document.getElementById('bankInfoArea');
+            const qrisInfoArea = document.getElementById('qrisInfoArea');
+            
+            bankInfoArea.classList.add('hidden'); 
+            qrisInfoArea.classList.add('hidden');
+            
+            if (method === 'Transfer Bank' && storeData.bank_info) bankInfoArea.classList.remove('hidden');
+            if (method === 'QRIS' && storeData.qris_url) qrisInfoArea.classList.remove('hidden');
+        }
+
+        async function applyCartCoupon() {
+            const codeEl = document.getElementById('coKuponCode');
+            const code = codeEl ? codeEl.value.trim() : '';
+            const msgEl = document.getElementById('coKuponMsg');
+            const btnApply = document.getElementById('btnApplyCup');
+            
+            if(!code) { 
+                posDiskonVal = 0; msgEl.classList.add('hidden'); recalculateCart(); return; 
+            }
+            
+            btnApply.innerText = '...';
+            try {
+                let fd = new FormData();
+                fd.append('action', 'validate_coupon');
+                fd.append('id_user_toko', storeData.id);
+                fd.append('kode_kupon', code);
+                fd.append('subtotal', posSubtotal);
+
+                const response = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
+                const res = await response.json();
+                
+                btnApply.innerText = 'Terapkan';
+                msgEl.classList.remove('hidden');
+                
+                if(res.success) { 
+                    posDiskonVal = res.diskon; 
+                    msgEl.innerText = res.message; 
+                    msgEl.className = "text-[10px] sm:text-xs mt-2 font-bold text-emerald-600 block"; 
+                    recalculateCart(); 
+                } else { 
+                    posDiskonVal = 0; 
+                    msgEl.innerText = res.message; 
+                    msgEl.className = "text-[10px] sm:text-xs mt-2 font-bold text-red-500 block"; 
+                    recalculateCart(); 
+                }
+            } catch(e) {
+                btnApply.innerText = 'Terapkan';
+                msgEl.classList.remove('hidden');
+                posDiskonVal = 0; 
+                msgEl.innerText = "Gagal mengecek kupon."; 
+                msgEl.className = "text-[10px] sm:text-xs mt-2 font-bold text-red-500 block"; 
+                recalculateCart(); 
+            }
+        }
+
+        function recalculateCart() {
+            const subtotalEl = document.getElementById('coSubtotal');
+            if(subtotalEl) subtotalEl.innerText = formatRupiah(posSubtotal);
+            
+            const ongkirEl = document.getElementById('coOngkir');
+            const ongkirId = ongkirEl ? ongkirEl.value : ''; 
+            posOngkirCost = 0;
+            
+            if(ongkirId) { 
+                const shp = globalShipping.find(s => s.id === ongkirId); 
+                if(shp) posOngkirCost = parseInt(shp.rate); 
+            }
+            
+            if(posDiskonVal > posSubtotal) posDiskonVal = posSubtotal;
+
+            let dpp = posSubtotal - posDiskonVal;
+            if(dpp < 0) dpp = 0;
+
+            let taxSettings = {};
+            try {
+                if (storeData && storeData.tax_settings) {
+                    taxSettings = JSON.parse(storeData.tax_settings);
+                }
+            } catch(e) {}
+
+            let ppnPercent = parseFloat(taxSettings.ppn) || 0;
+            posServiceVal = parseInt(taxSettings.service) || 0;
+            posPpnVal = Math.floor(dpp * (ppnPercent / 100));
+
+            posGrandTotal = dpp + posOngkirCost + posPpnVal + posServiceVal;
+            if(posGrandTotal < 0) posGrandTotal = 0;
+
+            const ongkirValEl = document.getElementById('coOngkirVal');
+            if(ongkirValEl) ongkirValEl.innerText = formatRupiah(posOngkirCost);
+            
+            const diskonValEl = document.getElementById('coDiskonVal');
+            if(diskonValEl) diskonValEl.innerText = '-' + formatRupiah(posDiskonVal);
+
+            const ppnRow = document.getElementById('coPpnRow');
+            if (posPpnVal > 0 && ppnRow) {
+                ppnRow.classList.remove('hidden');
+                document.getElementById('coPpnVal').innerText = formatRupiah(posPpnVal);
+            } else if (ppnRow) {
+                ppnRow.classList.add('hidden');
+            }
+
+            const serviceRow = document.getElementById('coBiayaLayananRow');
+            if (posServiceVal > 0 && serviceRow) {
+                serviceRow.classList.remove('hidden');
+                document.getElementById('coBiayaLayananVal').innerText = formatRupiah(posServiceVal);
+            } else if (serviceRow) {
+                serviceRow.classList.add('hidden');
+            }
+            
+            const modalTotalPayEl = document.getElementById('modalTotalPay');
+            if(modalTotalPayEl) modalTotalPayEl.innerText = formatRupiah(posGrandTotal);
+        }
+
+        async function submitOrderWA() {
+            if (cart.length === 0) return alert("Keranjang kosong!");
+            
+            const buyer = document.getElementById('buyerName').value.trim();
+            let buyerWa = document.getElementById('buyerWa').value.trim();
+            const notes = document.getElementById('buyerNotes').value.trim();
+            const method = document.getElementById('paymentMethod').value;
+            
+            if (!buyer || !buyerWa || !notes) {
+                return alert("Mohon lengkapi Nama, No WhatsApp, dan Alamat pengiriman.");
+            }
+
+            if (buyerWa.startsWith('0')) {
+                buyerWa = '62' + buyerWa.substring(1);
+            } else if (buyerWa.startsWith('+62')) {
+                buyerWa = '62' + buyerWa.substring(3);
+            }
+
+            const btn = document.getElementById('btnSubmitOrder'); 
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Memproses...`; 
+            btn.disabled = true; 
+            refreshIcons();
+
+            let waItemsText = "";
+            let apiItemsArr = [];
+            
+            cart.forEach(c => {
+                const sub = c.price * c.qty; 
+                waItemsText += `🔹 ${c.name} (${c.qty} ${c.unit || 'pcs'}) = ${formatRupiah(sub)}\n`;
+                apiItemsArr.push({ id: c.id, variant_id: c.variant_id || null, name: c.name, qty: c.qty, unit: c.unit || 'pcs' });
+            });
 
             try {
                 let fd = new FormData();
-                fd.append('action', 'get_public_stores'); 
+                fd.append('action', 'add_order'); 
+                fd.append('id_user_toko', storeData.id); 
+                fd.append('nama_pembeli', buyer); 
+                fd.append('total_belanja', posGrandTotal); 
+                fd.append('status', 'Baru'); 
                 
-                const response = await fetch(scriptURL, { method: 'POST', body: fd });
-                const res = await response.json();
+                let simpleStrArr = apiItemsArr.map(item => `${item.name} (${item.qty}${item.unit})`);
+                fd.append('detail_items', JSON.stringify(simpleStrArr)); 
+                fd.append('detail_items_raw', JSON.stringify(apiItemsArr)); 
+                fd.append('metode_pembayaran', method); 
+                fd.append('uang_bayar', posGrandTotal); 
+                fd.append('kembalian', 0); 
+                fd.append('no_wa_pembeli', buyerWa); 
+                fd.append('sumber_order', 'ONLINE');
+                fd.append('subtotal', posSubtotal); 
                 
-                if (res.success && res.data.length > 0) {
-                    allMitraData = res.data;
-                    sessionStorage.setItem('mitraDataCache', JSON.stringify(res.data)); // Simpan ke cache browser
-                    renderMitraTeaser();
-                } else if (!cachedMitra) {
-                    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--muted);">Belum ada mitra yang bergabung.</div>`;
+                const ongkirId = document.getElementById('coOngkir') ? document.getElementById('coOngkir').value : '';
+                fd.append('id_ongkir', ongkirId); 
+                const kuponCode = document.getElementById('coKuponCode') ? document.getElementById('coKuponCode').value.trim() : '';
+                fd.append('kode_kupon', kuponCode);
+                fd.append('pajak_ppn', posPpnVal);
+                fd.append('biaya_layanan', posServiceVal);
+
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: fd }); 
+                const json = await res.json();
+                let orderId = json.order_id || "ORD-" + Math.floor(Math.random() * 100000);
+
+                // SIMPAN KE LOCAL STORAGE JIKA BERHASIL MENGIRIM PESANAN
+                try {
+                    localStorage.setItem('jualanplus_buyer_info', JSON.stringify({
+                        name: buyer,
+                        wa: buyerWa,
+                        notes: notes
+                    }));
+                } catch(e) {}
+
+                let waNumber = String(storeData.wa_number || ""); 
+                if (waNumber.startsWith('0')) waNumber = '62' + waNumber.substring(1);
+                
+                let areaOngkirText = "";
+                if(ongkirId) { 
+                    const shp = globalShipping.find(s => s.id === ongkirId); 
+                    if(shp) areaOngkirText = shp.area; 
                 }
-            } catch (error) {
-                console.error("Gagal memuat mitra:", error);
-                if (!cachedMitra) {
-                    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--muted);">Gagal memuat daftar mitra.</div>`;
+
+                let waMessage = `${storeData.auto_reply || 'Halo admin, saya mau pesan!'}\n\n`;
+                waMessage += `*ORDER ID: ${orderId}*\nNama: *${buyer}*\nNo WA: ${buyerWa}\nCatatan/Alamat: ${notes}\n\n`;
+                waMessage += `*Rincian Pesanan:*\n${waItemsText}\n`;
+                waMessage += `Subtotal: ${formatRupiah(posSubtotal)}\nOngkir (${areaOngkirText || 'Ambil Sendiri'}): ${formatRupiah(posOngkirCost)}\nDiskon: -${formatRupiah(posDiskonVal)}\n`;
+                if (posPpnVal > 0) waMessage += `PPN: ${formatRupiah(posPpnVal)}\n`;
+                if (posServiceVal > 0) waMessage += `Biaya Layanan: ${formatRupiah(posServiceVal)}\n`;
+                waMessage += `*Grand Total: ${formatRupiah(posGrandTotal)}*\n\nMetode Pembayaran: *${method}*\n\nMohon segera diproses ya. Terima kasih!`;
+
+                trackPurchase(posGrandTotal, orderId);
+
+                if (json.wa_sent === true) {
+                    alert("Pesanan berhasil dibuat! Struk & detail telah dikirim otomatis ke WhatsApp Anda."); 
+                } else {
+                    const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`;
+                    window.open(waUrl, '_blank');
+                    alert("Pesanan berhasil dibuat! Anda akan diarahkan ke WhatsApp."); 
                 }
+                
+                cart = []; 
+                updateCartUI(); 
+                toggleCart(); 
+                fetchStoreCatalog();
+            } catch (err) { 
+                alert("Terjadi kesalahan sistem, silakan coba lagi."); 
+                console.error(err);
+            } finally { 
+                btn.innerHTML = originalText; 
+                btn.disabled = false; 
+                refreshIcons(); 
             }
         }
 
-        function renderMitraTeaser() {
-            const container = document.getElementById('mitraContainer');
-            const loadMoreContainer = document.getElementById('loadMoreContainer');
+        // ==========================================
+        // FITUR HALAMAN LEGAL
+        // ==========================================
+        function openLegalModal(title, encodedText) {
+            document.getElementById('legalTitle').innerHTML = `<i data-lucide="scale" class="w-5 h-5 text-emerald-500"></i> ${title}`;
+            document.getElementById('legalText').innerText = decodeURIComponent(encodedText);
             
-            // Ambil maksimal 8 data untuk teaser
-            const toDisplay = allMitraData.slice(0, 8);
+            const modal = document.getElementById('legalModal');
+            const content = document.getElementById('legalContent');
             
-            container.innerHTML = toDisplay.map(toko => {
-                const logoHtml = toko.logo 
-                    ? `<img src="${toko.logo}" alt="Logo">` 
-                    : toko.nama.charAt(0).toUpperCase();
-                
-                return `
-                <div class="mitra-card">
-                    <div class="mitra-logo">${logoHtml}</div>
-                    <h4 class="mitra-name">${toko.nama}</h4>
-                    <div class="mitra-badge">✓ Toko Online Aktif</div>
-                    <a href="/${toko.slug}" target="_blank" class="mitra-link">Kunjungi Toko</a>
-                </div>
-                `;
-            }).join('');
+            modal.classList.remove('hidden');
+            setTimeout(() => { 
+                content.classList.replace('translate-y-full', 'translate-y-0'); 
+            }, 10);
+            
+            refreshIcons();
+        }
 
-            // Tampilkan tombol ke halaman mitra.html jika toko lebih dari 8
-            if (allMitraData.length > 8) {
-                loadMoreContainer.style.display = 'block';
+        function closeLegalModal() {
+            const modal = document.getElementById('legalModal');
+            const content = document.getElementById('legalContent');
+            
+            content.classList.replace('translate-y-0', 'translate-y-full');
+            setTimeout(() => { 
+                modal.classList.add('hidden'); 
+            }, 300);
+        }
+
+        // ==========================================
+        // FITUR SECRET TAP & PIN
+        // ==========================================
+        function handleSecretTap() {
+            secretTapCount++; 
+            clearTimeout(secretTapTimer);
+            
+            const targetTap = parseInt(storeData.secret_tap_count) || 5;
+            
+            if (secretTapCount >= targetTap) { 
+                openPinModal(); 
+                secretTapCount = 0; 
+            } else {
+                secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 1000);
             }
         }
 
-        // Jalankan fetch saat halaman selesai dimuat
-        document.addEventListener("DOMContentLoaded", () => {
-            loadMitra();
+        function openPinModal() {
+            document.getElementById('secretPinInput').value = ''; 
+            document.getElementById('pinError').classList.add('hidden');
             
-            // Auto-open modal jika dari halaman login mengklik "Daftar Gratis"
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('register') === 'true') {
-                setTimeout(() => openModal(), 300);
+            const pinModal = document.getElementById('pinModal');
+            const pinContent = document.getElementById('pinContent');
+            
+            pinModal.classList.remove('hidden');
+            setTimeout(() => { 
+                pinContent.classList.remove('scale-95', 'opacity-0'); 
+                pinContent.classList.add('scale-100', 'opacity-100'); 
+                document.getElementById('secretPinInput').focus(); 
+            }, 10);
+        }
+
+        function closePinModal() {
+            const pinModal = document.getElementById('pinModal');
+            const pinContent = document.getElementById('pinContent');
+            
+            pinContent.classList.remove('scale-100', 'opacity-100'); 
+            pinContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => { pinModal.classList.add('hidden'); }, 300);
+        }
+
+        function verifyPin() {
+            const inputVal = document.getElementById('secretPinInput').value;
+            const correctPin = storeData.secret_pin.toString();
+            
+            if (inputVal === correctPin) {
+                window.location.href = 'login.html';
+            } else { 
+                document.getElementById('pinError').classList.remove('hidden'); 
+                document.getElementById('secretPinInput').value = ''; 
             }
+        }
+
+        document.getElementById('secretPinInput').addEventListener('keypress', function(e) { 
+            if (e.key === 'Enter') verifyPin(); 
         });
 
-        // ==========================================
-        // SUBMIT FORM PENDAFTARAN
-        // ==========================================
-        const form = document.getElementById('googleSheetForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const btnText = document.getElementById('btnText');
-
-        if (form) {
-            form.addEventListener('submit', e => {
-                e.preventDefault();
-                
-                btnText.textContent = 'Memproses pendaftaran...';
-                submitBtn.style.opacity = '0.75';
-                submitBtn.style.pointerEvents = 'none';
-
-                fetch(scriptURL, { method: 'POST', body: new FormData(form)})
-                    .then(response => response.json()) 
-                    .then(res => {
-                        btnText.textContent = 'Daftar & Buat Toko';
-                        submitBtn.style.opacity = '1';
-                        submitBtn.style.pointerEvents = 'auto';
-                        
-                        if (res.success) {
-                            showAlert("Berhasil! Akun Anda sudah terdaftar dengan masa aktif 14 hari.", true);
-                            form.reset();
-                            
-                            setTimeout(() => {
-                                closeModal();
-                                window.location.href = 'login.html';
-                            }, 3000);
-                        } else {
-                            showAlert(res.message, false);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error!', error);
-                        btnText.textContent = 'Daftar & Buat Toko';
-                        submitBtn.style.opacity = '1';
-                        submitBtn.style.pointerEvents = 'auto';
-                        showAlert('Koneksi ke server gagal. Coba lagi.', false);
-                    });
-            });
+        function showLoaderError(msg) {
+            const loader = document.getElementById('loaderScreen');
+            loader.innerHTML = `
+                <i data-lucide="alert-circle" class="w-12 h-12 text-red-500 mb-4"></i>
+                <h2 class="text-lg font-bold text-slate-800 text-center px-6">${msg}</h2>
+                <a href="index.html" class="mt-4 px-6 py-2 bg-emerald-500 text-white rounded-full text-sm font-bold">Refresh Halaman</a>
+            `;
+            refreshIcons();
         }
+
     </script>
 </body>
 </html>
